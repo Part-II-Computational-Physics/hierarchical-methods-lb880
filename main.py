@@ -10,19 +10,25 @@ matplotlib.use('TkAgg')
 from classes import Universe
 
 if __name__ == '__main__':
-    num_bodies = 2
+    num_bodies = 5
     size = 2
-    G = 0.1
-    dt = 0.01
+    G = 8
+    dt = 0.001
 
     universe = Universe(num_bodies, size, dt, G)
 
+    r = 1
+    v = np.sqrt(G * (num_bodies-1) / r)
     for i in range(num_bodies):
-        x = random.uniform(-size/2, size/2)
-        y = random.uniform(-size/2, size/2)
-        universe.body_x[i] = np.array([x,y])
-        theta = np.arctan2(y,x)
-        universe.body_v[i] = 1e-2 * random.uniform(0.3,1) * np.array([-np.sin(theta), np.cos(theta)])
+        theta = (i/num_bodies) * 2 * np.pi
+        universe.body_x[i] = r * np.array([np.cos(theta),np.sin(theta)])
+        universe.body_v[i] = v * np.array([-np.sin(theta),np.cos(theta)])
+
+    # for i in range(num_bodies):
+    #     r = random.uniform(0,1)
+    #     theta = random.uniform(0,2*np.pi)
+    #     universe.body_x[i] = r * np.array([np.cos(theta),np.sin(theta)])
+    #     universe.body_v[i] = 1.7 * np.sqrt(num_bodies * G * r) * np.array([-np.sin(theta),np.cos(theta)])
 
     fig, ax = plt.subplots()
     ax.set_xlim(-size, size)

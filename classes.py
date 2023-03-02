@@ -32,13 +32,11 @@ class Universe():
             for j,x2 in enumerate(self.body_x[i+1:], i+1):
                 # r points object 1 to object 2
                 r = x1 - x2
-                mag_r = np.abs(r)
-                norm_r = r / mag_r
+                mag_r = np.linalg.norm(r)
+                dir_r = r / mag_r
                 mag_F = self.G / (mag_r**2) # can later multiply in masses
                 # force felt by 1 points at 2
-                F = - mag_F * norm_r
+                F = - mag_F * dir_r
                 self.body_a[i] += F * self.body_m[j]
                 self.body_a[j] -= F * self.body_m[i]
-
-        print(self.body_a)
     
