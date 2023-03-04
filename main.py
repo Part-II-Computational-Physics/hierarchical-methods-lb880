@@ -15,20 +15,20 @@ if __name__ == '__main__':
     G = 10
     dt = 0.001
 
-    universe = Universe(num_bodies, size, dt, G, softening=0.04)
+    universe = Universe(num_bodies, size, dt, G, softening=0.05)
 
-    r = 1
-    v = 0.2 * np.sqrt(G * (num_bodies-1) / r)
-    for i in range(num_bodies):
-        theta = (i/num_bodies) * 2 * np.pi
-        universe.body_x[i] = r * np.array([np.cos(theta),np.sin(theta)])
-        universe.body_v[i] = v * np.array([-np.sin(theta),np.cos(theta)])
-
+    # r = 1
+    # v = 0.2 * np.sqrt(G * (num_bodies-1) / r)
     # for i in range(num_bodies):
-    #     r = random.uniform(0,1)
-    #     theta = random.uniform(0,2*np.pi)
+    #     theta = (i/num_bodies) * 2 * np.pi
     #     universe.body_x[i] = r * np.array([np.cos(theta),np.sin(theta)])
-    #     universe.body_v[i] = 1.2 * np.sqrt(num_bodies * G * r) * np.array([-np.sin(theta),np.cos(theta)])
+    #     universe.body_v[i] = v * np.array([-np.sin(theta),np.cos(theta)])
+
+    for i in range(num_bodies):
+        r = random.uniform(0,1)
+        theta = random.uniform(0,2*np.pi)
+        universe.body_x[i] = r * np.array([np.cos(theta),np.sin(theta)])
+        universe.body_v[i] = 1 * np.sqrt(num_bodies * G * r) * np.array([-np.sin(theta),np.cos(theta)])
 
     fig, ax = plt.subplots()
     ax.set_xlim(-size, size)
@@ -42,8 +42,8 @@ if __name__ == '__main__':
 
         points.set_data(universe.body_x[:,0], universe.body_x[:,1])
 
-        return [points]
+        return points,
 
-    anim = FuncAnimation(fig, animate, frames=1000, interval=5*universe.dt, blit=True)
+    anim = FuncAnimation(fig, animate, frames=1, interval=5*universe.dt, blit=True)
 
     plt.show()
