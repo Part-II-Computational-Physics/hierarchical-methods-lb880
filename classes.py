@@ -9,11 +9,13 @@ class Universe():
                  size = 100,
                  dt = 1,
                  G = 1,
+                 softening = 0.01,
                 ) -> None:
         self.num_bodies = num_bodies
         self.size = size
         self.dt = dt
         self.G = G
+        self.softening = softening
         self.body_x = np.zeros((num_bodies, 2))
         self.body_v = np.zeros((num_bodies, 2))
         self.body_a = np.zeros((num_bodies, 2))
@@ -33,10 +35,13 @@ class Universe():
                 # r points object 1 to object 2
                 r = x1 - x2
                 mag_r = np.linalg.norm(r)
-                dir_r = r / mag_r
-                mag_F = self.G / (mag_r**2) # can later multiply in masses
+                if mag_r >= self.softening: print('.')
+                else: print('000000000000000')
                 # force felt by 1 points at 2
-                F = - mag_F * dir_r
+                # can later multiply in masses
+                # softening factor ensures that distance is never close to zero => inverse finite
+                F = - (self.G * r) / (mag_r + self.softening)**3
+                # calculate accelerations
                 self.body_a[i] += F * self.body_m[j]
                 self.body_a[j] -= F * self.body_m[i]
     
