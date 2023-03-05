@@ -7,7 +7,7 @@ import random
 
 matplotlib.use('TkAgg')
 
-from classes import Universe
+from universe import Universe
 
 if __name__ == '__main__':
     num_bodies = 100
