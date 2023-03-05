@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 class Universe():
     """Wrapper class for all items to be simulated
@@ -20,6 +21,33 @@ class Universe():
         self.body_v = np.zeros((num_bodies, 2))
         self.body_a = np.zeros((num_bodies, 2))
         self.body_m = np.ones(num_bodies)
+
+    def initialise_positions_velocities(self, setup:str) -> None:
+        """Define the initial particle positions and velocites
+
+        Parameters
+        ----------
+        setup : str
+            'random'
+                randomised positions and velocites
+            'circle'
+                start in a circle traveling anticlockwise
+        """
+        if setup == 'random':
+            for i in range(self.num_bodies):
+                r = random.uniform(0,1)
+                theta = random.uniform(0,2*np.pi)
+                self.body_x[i] = r * np.array([np.cos(theta),np.sin(theta)])
+                self.body_v[i] = 1 * np.sqrt(self.num_bodies * self.G * r) * np.array([-np.sin(theta),np.cos(theta)])
+        elif setup == 'circle':
+            r = 1
+            v = 0.3 * np.sqrt(self.G * (self.num_bodies-1) / r)
+            for i in range(self.num_bodies):
+                theta = (i/self.num_bodies) * 2 * np.pi
+                self.body_x[i] = r * np.array([np.cos(theta),np.sin(theta)])
+                self.body_v[i] = v * np.array([-np.sin(theta),np.cos(theta)])
+        else:
+            raise ValueError('Not a valid initial position setup')
 
     def update_positions(self):
         self.calculate_accelerations()
