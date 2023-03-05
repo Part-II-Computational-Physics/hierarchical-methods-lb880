@@ -17,10 +17,15 @@ class Universe():
         self.dt = dt
         self.G = G
         self.softening = softening
+
         self.body_x = np.zeros((num_bodies, 2))
         self.body_v = np.zeros((num_bodies, 2))
         self.body_a = np.zeros((num_bodies, 2))
         self.body_m = np.ones(num_bodies)
+
+        self.momentum = []
+        self.kinetic_energy = []
+        self.potential_energy = []
 
     def initialise_positions_velocities(self, setup:str) -> None:
         """Define the initial particle positions and velocites
@@ -48,20 +53,25 @@ class Universe():
                 self.body_v[i] = v * np.array([-np.sin(theta),np.cos(theta)])
         else:
             raise ValueError('Not a valid initial position setup')
+        
+        # Record initial values of momentum and energy
+        self.calculate_system_momentum()
+        self.calculate_system_kinetic_energy()
+        self.calculate_system_potential_energy()
 
-    def update_positions(self):
+    def update_positions(self) -> None:
         self.calculate_accelerations()
 
         self.body_v += self.dt * self.body_a
         self.body_x += self.dt * self.body_v
 
-    def calculate_accelerations(self):
+    def calculate_accelerations(self) -> None:
         self.body_a = np.zeros((self.num_bodies, 2))
 
-        for i,x1 in enumerate(self.body_x[:-1]):
-            for j,x2 in enumerate(self.body_x[i+1:], i+1):
+        for i,position1 in enumerate(self.body_x[:-1]):
+            for j,position2 in enumerate(self.body_x[i+1:], i+1):
                 # r points object 1 to object 2
-                r = x1 - x2
+                r = position1 - position2
                 mag_r = np.linalg.norm(r)
                 dir_r = r / mag_r
                 # force felt by 1 points at 2
@@ -71,4 +81,33 @@ class Universe():
                 # calculate accelerations
                 self.body_a[i] += F * self.body_m[j]
                 self.body_a[j] -= F * self.body_m[i]
+
+    def calculate_system_momentum(self) -> None:
+        momenta_array = self.body_v[:] * self.body_m[:,np.newaxis]
+        total_momentum = np.sum(momenta_array)
+
+        self.momentum.append(total_momentum)
+
+    def calculate_system_kinetic_energy(self) -> None:
+        kinetic_array = 0.5 * self.body_m * np.linalg.norm(self.body_v, axis=1)**2
+        total_kinetic_energy = np.sum(kinetic_array)
+
+        self.kinetic_energy.append(total_kinetic_energy)
+
+    def calculate_system_potential_energy(self) -> None:
+        """Calculate the systems potential energy at a point in time
+            Then add value to potential energy array
+        
+        Does so through sum of all pairwise potentials"""
+
+        total_potential_energy = 0
+
+        for i,position1 in enumerate(self.body_x[:-1]):
+            for j,position2 in enumerate(self.body_x[i+1:], i+1):
+                potential = - self.G * self.body_m[i] * self.body_m[j] / \
+                                np.linalg.norm(position1 - position2)
+                
+                total_potential_energy += potential
+                
+        self.potential_energy.append(total_potential_energy)
     
