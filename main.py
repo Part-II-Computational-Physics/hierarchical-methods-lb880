@@ -16,7 +16,7 @@ if __name__ == '__main__':
     G = 10
     dt = 0.001
 
-    universe = Universe(num_bodies, size, dt, G, softening=0.05)
+    universe = Universe(num_bodies, size, dt, G, softening=0.03)
 
     universe.initialise_positions_velocities('random')
 

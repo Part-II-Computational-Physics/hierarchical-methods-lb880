@@ -63,10 +63,11 @@ class Universe():
                 # r points object 1 to object 2
                 r = x1 - x2
                 mag_r = np.linalg.norm(r)
+                dir_r = r / mag_r
                 # force felt by 1 points at 2
                 # can later multiply in masses
                 # softening factor ensures that distance is never close to zero => inverse finite
-                F = - (self.G * r) / (np.maximum(mag_r, self.softening))**3
+                F = - (self.G * dir_r) / (mag_r**2 + self.softening**2)
                 # calculate accelerations
                 self.body_a[i] += F * self.body_m[j]
                 self.body_a[j] -= F * self.body_m[i]
