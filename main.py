@@ -8,9 +8,10 @@ import random
 matplotlib.use('TkAgg')
 
 from universe import Universe
+from animator import Animator
 
 if __name__ == '__main__':
-    num_bodies = 100
+    num_bodies = 50
     size = 2
     G = 10
     dt = 0.001
@@ -30,20 +31,7 @@ if __name__ == '__main__':
         universe.body_x[i] = r * np.array([np.cos(theta),np.sin(theta)])
         universe.body_v[i] = 1 * np.sqrt(num_bodies * G * r) * np.array([-np.sin(theta),np.cos(theta)])
 
-    fig, ax = plt.subplots()
-    ax.set_xlim(-size, size)
-    ax.set_ylim(-size, size)
-    ax.set_aspect('equal')
-
-    points, = ax.plot(universe.body_x[:,0], universe.body_x[:,1], 'o')
-
-    def animate(i):
-        universe.update_positions()
-
-        points.set_data(universe.body_x[:,0], universe.body_x[:,1])
-
-        return points,
-
-    anim = FuncAnimation(fig, animate, frames=1, interval=5*universe.dt, blit=True)
-
-    plt.show()
+    animator = Animator(universe)
+    animator.create_figure_basic()
+    animator.produce_animation_basic()
+    
