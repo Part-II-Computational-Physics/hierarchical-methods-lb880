@@ -1,9 +1,5 @@
 import numpy as np
 import matplotlib
-import matplotlib.pyplot as plt
-import scipy as sp
-from matplotlib.animation import FuncAnimation
-import random
 
 matplotlib.use('TkAgg')
 
@@ -11,14 +7,14 @@ from universe import Universe
 from animator import Animator
 
 if __name__ == '__main__':
-    num_bodies = 100
+    num_bodies = 10
     size = 2
-    G = 10
+    G = 20
     dt = 0.001
 
-    universe = Universe(num_bodies, size, dt, G, softening=0.05)
+    universe = Universe(num_bodies, size, dt, G, softening=0.1)
 
-    universe.initialise_positions_velocities('circle')
+    universe.initialise_positions_velocities('random')
 
     animator = Animator(universe)
     animator.create_figure_basic()
