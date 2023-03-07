@@ -1,0 +1,7 @@
+implement better integration
+
+calculate accelerations using more numpy
+
+3D
+
+start on actual approx methods
