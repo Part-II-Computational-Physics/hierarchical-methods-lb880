@@ -60,7 +60,7 @@ class Universe():
         self.calculate_system_potential_energy()
 
     def update_positions(self) -> None:
-        self.calculate_accelerations()
+        self.calculate_accelerations_np_naive()
 
         self.body_v += self.dt * self.body_a
         self.body_x += self.dt * self.body_v
@@ -81,6 +81,28 @@ class Universe():
                 # calculate accelerations
                 self.body_a[i] += F * self.body_m[j]
                 self.body_a[j] -= F * self.body_m[i]
+
+    def calculate_accelerations_np_naive(self) -> None:
+        self.body_a = np.zeros((self.num_bodies,2))
+
+        body_x = self.body_x
+        body_m = self.body_m
+
+        for i, pos in enumerate(body_x):
+            pos_array = np.full((self.num_bodies-1,2), pos)
+            # points towards current body
+            r = pos_array - body_x[1:]
+            mag_r = np.linalg.norm(r, axis=1)
+            dir_r = np.divide(r, mag_r[:,np.newaxis])
+            # force felt by 1
+            # can later multiply in masses
+            # softening factor ensures that distance is never close to zero => inverse finite
+            F = - (self.G * dir_r) / (mag_r[:,np.newaxis]**2 + self.softening**2)
+            # calculate accelerations
+            self.body_a[i] = np.sum(F * body_m[1:,np.newaxis], axis=0)
+            # roll on the body_x
+            body_x = np.roll(body_x, -1, axis=0)
+            body_m = np.roll(body_m, -1, axis=0)
 
     def calculate_system_momentum(self) -> None:
         momenta_array = self.body_v[:] * self.body_m[:,np.newaxis]
