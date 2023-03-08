@@ -21,7 +21,7 @@ class Universe():
         self.body_x = np.zeros((num_bodies, 2))
         self.body_v = np.zeros((num_bodies, 2))
         self.body_a = np.zeros((num_bodies, 2))
-        self.body_m = np.ones(num_bodies)
+        self.body_m = np.ones(num_bodies).reshape((-1,1)) # make column vector
 
         self.momentum = []
         self.kinetic_energy = []
@@ -89,29 +89,29 @@ class Universe():
         body_m = self.body_m
 
         for i, pos in enumerate(body_x):
-            pos_array = np.full((self.num_bodies-1,2), pos)
             # points towards current body
-            r = pos_array - body_x[1:]
-            mag_r = np.linalg.norm(r, axis=1)
-            dir_r = np.divide(r, mag_r[:,np.newaxis])
-            # force felt by 1
+            r = pos - body_x[1:]
+            mag_r = np.linalg.norm(r, axis=1).reshape((-1,1))
+            dir_r = r / mag_r
+            # force felt by current body
             # can later multiply in masses
             # softening factor ensures that distance is never close to zero => inverse finite
-            F = - (self.G * dir_r) / (mag_r[:,np.newaxis]**2 + self.softening**2)
+            F = - (self.G * dir_r) / (mag_r**2 + self.softening**2)
             # calculate accelerations
-            self.body_a[i] = np.sum(F * body_m[1:,np.newaxis], axis=0)
+            self.body_a[i] = np.sum(F * body_m[1:], axis=0)
             # roll on the body_x
             body_x = np.roll(body_x, -1, axis=0)
             body_m = np.roll(body_m, -1, axis=0)
 
     def calculate_system_momentum(self) -> None:
-        momenta_array = self.body_v[:] * self.body_m[:,np.newaxis]
+        momenta_array = self.body_v * self.body_m
         total_momentum = np.sum(momenta_array)
 
         self.momentum.append(total_momentum)
 
     def calculate_system_kinetic_energy(self) -> None:
-        kinetic_array = 0.5 * self.body_m * np.linalg.norm(self.body_v, axis=1)**2
+        kinetic_array = 0.5 * self.body_m * \
+                        np.linalg.norm(self.body_v, axis=1).reshape((-1,1))**2
         total_kinetic_energy = np.sum(kinetic_array)
 
         self.kinetic_energy.append(total_kinetic_energy)
@@ -130,6 +130,21 @@ class Universe():
                                 np.linalg.norm(position1 - position2)
                 
                 total_potential_energy += potential
-                
+
+
+        # body_x = self.body_x
+        # body_m = self.body_m
+
+        # for i, pos in enumerate(body_x):
+        #     r = pos - body_x[1:]
+        #     mag_r = np.linalg.norm(r, axis=1).reshape((-1,1))
+        #     potential = - self.G * body_m[0] * body_m[1:] / mag_r
+
+        #     total_potential_energy += 0.5 * np.sum(potential)
+
+        #     body_x = np.roll(body_x, -1, axis=0)
+        #     body_m = np.roll(body_m, -1, axis=0)
+
         self.potential_energy.append(total_potential_energy)
+
     

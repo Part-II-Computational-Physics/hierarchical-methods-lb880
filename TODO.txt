@@ -1,6 +1,8 @@
 implement better integration
 
 calculate accelerations using more numpy
+    calculate potential energy using numpy
+        current issue in double counting
 
 3D
 

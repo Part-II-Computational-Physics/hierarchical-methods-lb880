@@ -63,7 +63,7 @@ class Animator():
         ax_p.plot(self.universe.momentum)
         ax_p.set_ylabel('Momentum')
         
-        total_energy = np.array(self.universe.kinetic_energy) + np.array(self.universe.potential_energy)
+        total_energy = np.array(self.universe.kinetic_energy) + np.array(self.universe.potential_energy).reshape(-1)
         ax_E.plot(self.universe.kinetic_energy, label='Kinetic')
         ax_E.plot(self.universe.potential_energy, label='Potential')
         ax_E.plot(total_energy, label='Total')
