@@ -65,6 +65,46 @@ class Universe():
         self.body_v += self.dt * self.body_a
         self.body_x += self.dt * self.body_v
 
+    def update_positions_RK4(self) -> None:
+        # Using RK4 integration
+        # self.body_x/v is the x_n v_n respective
+
+        # calculate intermediates
+        k1v = self.calculate_accelerations_with_return(self.body_x) * self.dt
+        k1x = self.body_v * self.dt
+
+        k2v = self.calculate_accelerations_with_return(self.body_x + k1x/2) * self.dt
+        k2x = (self.body_v + k1v/2) * self.dt
+
+        k3v = self.calculate_accelerations_with_return(self.body_x + k2x/2) * self.dt
+        k3x = (self.body_v + k2v/2) * self.dt
+
+        k4v = self.calculate_accelerations_with_return(self.body_x + k3x) * self.dt
+        k4x = (self.body_v + k3v) * self.dt
+
+        # update to next values
+        self.body_v += 0.5 * (1/6)*(k1v + 2*k2v + 2*k3v + k4v)
+        self.body_x += 0.5 * (1/6)*(k1x + 2*k2x + 2*k3x + k4x)
+
+    def calculate_accelerations_with_return(self, body_x):
+        body_a = np.zeros((self.num_bodies, 2))
+
+        for i,position1 in enumerate(body_x[:-1]):
+            for j,position2 in enumerate(body_x[i+1:], i+1):
+                # r points object 1 to object 2
+                r = position1 - position2
+                mag_r = np.linalg.norm(r)
+                dir_r = r / mag_r
+                # force felt by 1 points at 2
+                # can later multiply in masses
+                # softening factor ensures that distance is never close to zero => inverse finite
+                F = - (self.G * dir_r) / np.maximum(mag_r,self.softening)**2
+                # calculate accelerations
+                body_a[i] += F * self.body_m[j]
+                body_a[j] -= F * self.body_m[i]
+
+        return body_a
+
     def calculate_accelerations(self) -> None:
         self.body_a = np.zeros((self.num_bodies, 2))
 
