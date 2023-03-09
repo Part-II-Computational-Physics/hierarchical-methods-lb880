@@ -43,7 +43,7 @@ class Universe():
                 r = random.uniform(0,1)
                 theta = random.uniform(0,2*np.pi)
                 self.body_x[i] = r * np.array([np.cos(theta),np.sin(theta)])
-                self.body_v[i] = 1 * np.sqrt(self.num_bodies * self.G * r) * np.array([-np.sin(theta),np.cos(theta)])
+                self.body_v[i] = 1 * np.sqrt(self.num_bodies * self.G / r) * np.array([-np.sin(theta),np.cos(theta)])
         elif setup == 'circle':
             r = 1
             v = 0.3 * np.sqrt(self.G * (self.num_bodies-1) / r)
@@ -51,6 +51,15 @@ class Universe():
                 theta = (i/self.num_bodies) * 2 * np.pi
                 self.body_x[i] = r * np.array([np.cos(theta),np.sin(theta)])
                 self.body_v[i] = v * np.array([-np.sin(theta),np.cos(theta)])
+        elif setup == 'orbital':
+            M = 10000
+            self.body_m[0] = M
+            self.body_x[0] = np.array([0,0])
+            for i in range(1, self.num_bodies):
+                r = random.uniform(0.6,1.5)
+                theta = random.uniform(0,2*np.pi)
+                self.body_x[i] = r * np.array([np.cos(theta),np.sin(theta)])
+                self.body_v[i] = np.sqrt(self.G * M / r) * np.array([-np.sin(theta),np.cos(theta)])
         else:
             raise ValueError('Not a valid initial position setup')
         
@@ -60,7 +69,7 @@ class Universe():
         self.calculate_system_potential_energy()
 
     def update_positions(self) -> None:
-        self.calculate_accelerations_np_naive()
+        self.calculate_accelerations_with_np()
 
         self.body_v += self.dt * self.body_a
         self.body_x += self.dt * self.body_v
@@ -122,7 +131,7 @@ class Universe():
                 self.body_a[i] += F * self.body_m[j]
                 self.body_a[j] -= F * self.body_m[i]
 
-    def calculate_accelerations_np_naive(self) -> None:
+    def calculate_accelerations_with_np(self) -> None:
         self.body_a = np.zeros((self.num_bodies,2))
 
         body_x = self.body_x
@@ -160,31 +169,24 @@ class Universe():
         """Calculate the systems potential energy at a point in time
             Then add value to potential energy array
         
-        Does so through sum of all pairwise potentials"""
+        Does so through sum of all pairwise potentials
+        
+        Uses numpy functionality"""
+
+        body_x = self.body_x
+        body_m = self.body_m
 
         total_potential_energy = 0
 
-        for i,position1 in enumerate(self.body_x[:-1]):
-            for j,position2 in enumerate(self.body_x[i+1:], i+1):
-                potential = - self.G * self.body_m[i] * self.body_m[j] / \
-                                np.linalg.norm(position1 - position2)
-                
-                total_potential_energy += potential
+        for i, pos in enumerate(body_x):
+            r = pos - body_x[1:]
+            mag_r = np.linalg.norm(r, axis=1).reshape((-1,1))
+            potential = - self.G * body_m[0] * body_m[1:] / mag_r
 
+            total_potential_energy += 0.5 * np.sum(potential)
 
-        # body_x = self.body_x
-        # body_m = self.body_m
-
-        # for i, pos in enumerate(body_x):
-        #     r = pos - body_x[1:]
-        #     mag_r = np.linalg.norm(r, axis=1).reshape((-1,1))
-        #     potential = - self.G * body_m[0] * body_m[1:] / mag_r
-
-        #     total_potential_energy += 0.5 * np.sum(potential)
-
-        #     body_x = np.roll(body_x, -1, axis=0)
-        #     body_m = np.roll(body_m, -1, axis=0)
+            body_x = np.roll(body_x, -1, axis=0)
+            body_m = np.roll(body_m, -1, axis=0)
 
         self.potential_energy.append(total_potential_energy)
-
     
