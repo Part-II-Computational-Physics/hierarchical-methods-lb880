@@ -158,7 +158,7 @@ class Universe():
                 self.body_a[i] += F * self.body_m[j]
                 self.body_a[j] -= F * self.body_m[i]
 
-    def calculate_accelerations_with_return(self, body_x:np.NDArray) -> np.NDArray:
+    def calculate_accelerations_with_return(self, body_x):
         """Calculate the accelerations of all bodies in system
 
         Takes positions as arguments and then returns accelerations
@@ -169,12 +169,12 @@ class Universe():
 
         Parameters
         ----------
-        body_x : np.NDArray
+        body_x : numpy array
             array of positions of all bodies
 
         Returns
         -------
-        body_a : np.NDArray
+        body_a : numpy array
             array of velocites of all bodies
         """
 
