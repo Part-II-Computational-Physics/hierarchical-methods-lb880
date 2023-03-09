@@ -2,7 +2,36 @@ import numpy as np
 import random
 
 class Universe():
-    """Wrapper class for all items to be simulated
+    """Wrapper class for simulated system
+
+    Attributes
+    ----------
+    num_bodies
+        Number of simulated bodies
+    size
+        System size (sets the +/- in x and y, so total box is 2size x 2size)
+    dt
+        Timestep
+    G
+        Gravitational constant
+    softening
+        Factor added in quadrature to denom of force calculation to avoid singulrities
+    
+    body_x, body_v, body_a, body_m
+        Arrays of body positions, velocites, etc.
+    momentum, kinetic_energy, potential_energy
+        Lists of these values computed on each frame
+
+    Methods
+    -------
+    initialise_positions_velocities
+
+    update_positions
+    
+    calculate_accelerations
+
+    calculate_system_...
+        Calc the various properies
     """
 
     def __init__(self,
@@ -37,6 +66,8 @@ class Universe():
                 randomised positions and velocites
             'circle'
                 start in a circle traveling anticlockwise
+            'orbit
+                one central heavy mass, with the remaining masses set to orbit round
         """
         if setup == 'random':
             for i in range(self.num_bodies):
@@ -69,14 +100,22 @@ class Universe():
         self.calculate_system_potential_energy()
 
     def update_positions(self) -> None:
+        """Update the positions of all bodies in the universe
+        
+        Calculates accelerations and updates using Euler
+        """
         self.calculate_accelerations_with_np()
 
         self.body_v += self.dt * self.body_a
         self.body_x += self.dt * self.body_v
 
     def update_positions_RK4(self) -> None:
-        # Using RK4 integration
-        # self.body_x/v is the x_n v_n respective
+        """Update the positions of all bodies in the universe
+        
+        Calculates accelerations and updates using RK4
+
+        self.body_x, self.body_v is the x_n v_n respective
+        """
 
         # calculate intermediates
         k1v = self.calculate_accelerations_with_return(self.body_x) * self.dt
@@ -95,7 +134,50 @@ class Universe():
         self.body_v += 0.5 * (1/6)*(k1v + 2*k2v + 2*k3v + k4v)
         self.body_x += 0.5 * (1/6)*(k1x + 2*k2x + 2*k3x + k4x)
 
-    def calculate_accelerations_with_return(self, body_x):
+    def calculate_accelerations(self) -> None:
+        """Calculate the accelerations of all bodies in system
+        
+        No approx in method
+        
+        Runs using python for loops
+        """
+
+        self.body_a = np.zeros((self.num_bodies, 2))
+
+        for i,position1 in enumerate(self.body_x[:-1]):
+            for j,position2 in enumerate(self.body_x[i+1:], i+1):
+                # r points object 1 to object 2
+                r = position1 - position2
+                mag_r = np.linalg.norm(r)
+                dir_r = r / mag_r
+                # force felt by 1 points at 2
+                # can later multiply in masses
+                # softening factor ensures that distance is never close to zero => inverse finite
+                F = - (self.G * dir_r) / (mag_r**2 + self.softening**2)
+                # calculate accelerations
+                self.body_a[i] += F * self.body_m[j]
+                self.body_a[j] -= F * self.body_m[i]
+
+    def calculate_accelerations_with_return(self, body_x:np.NDArray) -> np.NDArray:
+        """Calculate the accelerations of all bodies in system
+
+        Takes positions as arguments and then returns accelerations
+        
+        No approx in method
+        
+        Runs using python for loops
+
+        Parameters
+        ----------
+        body_x : np.NDArray
+            array of positions of all bodies
+
+        Returns
+        -------
+        body_a : np.NDArray
+            array of velocites of all bodies
+        """
+
         body_a = np.zeros((self.num_bodies, 2))
 
         for i,position1 in enumerate(body_x[:-1]):
@@ -114,24 +196,15 @@ class Universe():
 
         return body_a
 
-    def calculate_accelerations(self) -> None:
-        self.body_a = np.zeros((self.num_bodies, 2))
-
-        for i,position1 in enumerate(self.body_x[:-1]):
-            for j,position2 in enumerate(self.body_x[i+1:], i+1):
-                # r points object 1 to object 2
-                r = position1 - position2
-                mag_r = np.linalg.norm(r)
-                dir_r = r / mag_r
-                # force felt by 1 points at 2
-                # can later multiply in masses
-                # softening factor ensures that distance is never close to zero => inverse finite
-                F = - (self.G * dir_r) / (mag_r**2 + self.softening**2)
-                # calculate accelerations
-                self.body_a[i] += F * self.body_m[j]
-                self.body_a[j] -= F * self.body_m[i]
-
     def calculate_accelerations_with_np(self) -> None:
+        """Calculate the accelerations of all bodies in system
+        
+        No approx in method
+        
+        Runs using numpy vectors
+
+        O(N) for up to 400 bodies (assumed due to numpy optimisation)
+        """
         self.body_a = np.zeros((self.num_bodies,2))
 
         body_x = self.body_x
@@ -153,12 +226,15 @@ class Universe():
             body_m = np.roll(body_m, -1, axis=0)
 
     def calculate_system_momentum(self) -> None:
+        """Calculate total momentum of system and add to class list"""
+
         momenta_array = self.body_v * self.body_m
         total_momentum = np.sum(momenta_array)
 
         self.momentum.append(total_momentum)
 
     def calculate_system_kinetic_energy(self) -> None:
+        """Calculate total kinetic energy of system and add to class list"""
         kinetic_array = 0.5 * self.body_m * \
                         np.linalg.norm(self.body_v, axis=1).reshape((-1,1))**2
         total_kinetic_energy = np.sum(kinetic_array)
@@ -166,12 +242,10 @@ class Universe():
         self.kinetic_energy.append(total_kinetic_energy)
 
     def calculate_system_potential_energy(self) -> None:
-        """Calculate the systems potential energy at a point in time
-            Then add value to potential energy array
+        """Calculate total potential energy of system and add to class list
         
-        Does so through sum of all pairwise potentials
-        
-        Uses numpy functionality"""
+        Uses numpy functionality
+        """
 
         body_x = self.body_x
         body_m = self.body_m

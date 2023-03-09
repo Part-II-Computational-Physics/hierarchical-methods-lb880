@@ -5,12 +5,15 @@ from matplotlib.animation import FuncAnimation
 from universe import Universe
 
 class Animator():
+    """Class to hold various animation routines"""
+
     def __init__(self,
                  universe: Universe,
                 ) -> None:
         self.universe = universe
 
-    def create_figure_basic(self) -> None:
+    def create_figure_for_animation(self) -> None:
+        """Setup figure for animation"""
         self.fig, self.ax = plt.subplots()
         self.ax.set_xlim(-self.universe.size, self.universe.size)
         self.ax.set_ylim(-self.universe.size, self.universe.size)
@@ -29,6 +32,7 @@ class Animator():
         return self.points,
 
     def produce_animation_basic(self):
+        """Produce only animation"""
         self.anim = FuncAnimation(self.fig,
                                   self.animate_function_basic,
                                   100,
@@ -50,6 +54,7 @@ class Animator():
         return self.points,
     
     def produce_animation_with_momentum_energy(self):
+        """Produce animation, then plot p, KE, PE after"""
         self.anim = FuncAnimation(self.fig,
                                   self.animate_function_with_momentum_energy,
                                   100,
