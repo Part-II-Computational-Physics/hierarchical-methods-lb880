@@ -1,4 +1,5 @@
 implement better integration
+    RK4 has extra factor of half - remove
 
 calculate accelerations using more numpy
     calculate potential energy using numpy
