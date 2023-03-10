@@ -17,18 +17,18 @@ class Universe():
     softening
         Factor added in quadrature to denom of force calculation to avoid singulrities
     
-    body_x, body_v, body_a, body_m
+    body_x, body_v, body_m
         Arrays of body positions, velocites, etc.
     momentum, kinetic_energy, potential_energy
         Lists of these values computed on each frame
 
     Methods
     -------
-    initialise_positions_velocities
+    initialise_bodies
 
     update_positions
     
-    calculate_accelerations
+    accelerations
 
     calculate_system_...
         Calc the various properies
@@ -49,14 +49,13 @@ class Universe():
 
         self.body_x = np.zeros((num_bodies, 2))
         self.body_v = np.zeros((num_bodies, 2))
-        self.body_a = np.zeros((num_bodies, 2))
         self.body_m = np.ones(num_bodies).reshape((-1,1)) # make column vector
 
         self.momentum = []
         self.kinetic_energy = []
         self.potential_energy = []
 
-    def initialise_positions_velocities(self, setup:str) -> None:
+    def initialise_bodies(self, setup:str) -> None:
         """Define the initial particle positions and velocites
 
         Parameters
@@ -99,16 +98,6 @@ class Universe():
         self.calculate_system_kinetic_energy()
         self.calculate_system_potential_energy()
 
-    def update_positions(self) -> None:
-        """Update the positions of all bodies in the universe
-        
-        Calculates accelerations and updates using Euler
-        """
-        self.calculate_accelerations_with_np()
-
-        self.body_v += self.dt * self.body_a
-        self.body_x += self.dt * self.body_v
-
     def update_positions_RK4(self) -> None:
         """Update the positions of all bodies in the universe
         
@@ -118,47 +107,33 @@ class Universe():
         """
 
         # calculate intermediates
-        k1v = self.calculate_accelerations_with_return(self.body_x) * self.dt
+        k1v = self.accelerations_pairwise(self.body_x) * self.dt
         k1x = self.body_v * self.dt
 
-        k2v = self.calculate_accelerations_with_return(self.body_x + k1x/2) * self.dt
+        k2v = self.accelerations_pairwise(self.body_x + k1x/2) * self.dt
         k2x = (self.body_v + k1v/2) * self.dt
 
-        k3v = self.calculate_accelerations_with_return(self.body_x + k2x/2) * self.dt
+        k3v = self.accelerations_pairwise(self.body_x + k2x/2) * self.dt
         k3x = (self.body_v + k2v/2) * self.dt
 
-        k4v = self.calculate_accelerations_with_return(self.body_x + k3x) * self.dt
+        k4v = self.accelerations_pairwise(self.body_x + k3x) * self.dt
         k4x = (self.body_v + k3v) * self.dt
 
         # update to next values
-        self.body_v += 0.5 * (1/6)*(k1v + 2*k2v + 2*k3v + k4v)
-        self.body_x += 0.5 * (1/6)*(k1x + 2*k2x + 2*k3x + k4x)
+        self.body_v += (1/6) * (k1v + 2*k2v + 2*k3v + k4v)
+        self.body_x += (1/6) * (k1x + 2*k2x + 2*k3x + k4x)
 
-    def calculate_accelerations(self) -> None:
-        """Calculate the accelerations of all bodies in system
+    def update_positions_euler(self) -> None:
+        """Update the positions of all bodies in the universe
         
-        No approx in method
-        
-        Runs using python for loops
+        Calculates accelerations and updates using Euler
         """
+        self.accelerations_pairwise_np()
 
-        self.body_a = np.zeros((self.num_bodies, 2))
+        self.body_v += self.dt * self.accelerations_pairwise(self.body_x)
+        self.body_x += self.dt * self.body_v
 
-        for i,position1 in enumerate(self.body_x[:-1]):
-            for j,position2 in enumerate(self.body_x[i+1:], i+1):
-                # r points object 1 to object 2
-                r = position1 - position2
-                mag_r = np.linalg.norm(r)
-                dir_r = r / mag_r
-                # force felt by 1 points at 2
-                # can later multiply in masses
-                # softening factor ensures that distance is never close to zero => inverse finite
-                F = - (self.G * dir_r) / (mag_r**2 + self.softening**2)
-                # calculate accelerations
-                self.body_a[i] += F * self.body_m[j]
-                self.body_a[j] -= F * self.body_m[i]
-
-    def calculate_accelerations_with_return(self, body_x):
+    def accelerations_pairwise(self, body_x):
         """Calculate the accelerations of all bodies in system
 
         Takes positions as arguments and then returns accelerations
@@ -196,7 +171,7 @@ class Universe():
 
         return body_a
 
-    def calculate_accelerations_with_np(self) -> None:
+    def accelerations_pairwise_np(self, body_x):
         """Calculate the accelerations of all bodies in system
         
         No approx in method
@@ -204,10 +179,19 @@ class Universe():
         Runs using numpy vectors
 
         O(N) for up to 400 bodies (assumed due to numpy optimisation)
-        """
-        self.body_a = np.zeros((self.num_bodies,2))
 
-        body_x = self.body_x
+        Parameters
+        ----------
+        body_x : numpy array
+            array of positions of all bodies
+
+        Returns
+        -------
+        body_a : numpy array
+            array of velocites of all bodies
+        """
+        body_a = np.zeros((self.num_bodies,2))
+
         body_m = self.body_m
 
         for i, pos in enumerate(body_x):
@@ -220,10 +204,12 @@ class Universe():
             # softening factor ensures that distance is never close to zero => inverse finite
             F = - (self.G * dir_r) / (mag_r**2 + self.softening**2)
             # calculate accelerations
-            self.body_a[i] = np.sum(F * body_m[1:], axis=0)
+            body_a[i] = np.sum(F * body_m[1:], axis=0)
             # roll on the body_x
             body_x = np.roll(body_x, -1, axis=0)
             body_m = np.roll(body_m, -1, axis=0)
+
+        return body_a
 
     def calculate_system_momentum(self) -> None:
         """Calculate total momentum of system and add to class list"""

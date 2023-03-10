@@ -24,7 +24,7 @@ class Animator():
                                     'o')
     
     def animate_function_basic(self, i):
-        self.universe.update_positions()
+        self.universe.update_positions_RK4()
 
         self.points.set_data(self.universe.body_x[:,0],
                              self.universe.body_x[:,1])
@@ -42,7 +42,7 @@ class Animator():
         plt.show()
 
     def animate_function_with_momentum_energy(self, i):
-        self.universe.update_positions()
+        self.universe.update_positions_RK4()
 
         self.universe.calculate_system_momentum()
         self.universe.calculate_system_kinetic_energy()
