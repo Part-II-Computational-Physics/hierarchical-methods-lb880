@@ -1,0 +1,6 @@
+calculate accelerations using more numpy
+    not really useful as order N method
+
+3D
+
+start on actual approx methods
