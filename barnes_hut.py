@@ -70,10 +70,10 @@ class Quadnode():
             # and insert there
             child.quad_insert(body, min_size)
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+def main():
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
 
-if __name__ == "__main__":
     body_list = []
     total_size = 1
     num_bodies = 100
@@ -108,3 +108,5 @@ if __name__ == "__main__":
 
     plt.show()
 
+if __name__ == "__main__":
+    main()
