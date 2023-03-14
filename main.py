@@ -4,21 +4,22 @@ matplotlib.use('TkAgg')
 
 from universe import Universe
 from animator import Animator
+import pairwise
 
 def main():
     num_bodies = 10
-    size = 2
+    size = 1
     G = .1
     dt = 0.01
-    softening = 0.1
+    softening = 0.05
 
     universe = Universe(num_bodies, size, dt, G, softening)
 
     universe.initialise_bodies('circle')
 
-    animator = Animator(universe)
+    animator = Animator(universe, pairwise.calculate_accelerations)
     animator.create_figure_for_animation()
-    animator.produce_animation_with_momentum_energy()
+    animator.produce_animation(True)
 
 if __name__ == '__main__':
     main()
