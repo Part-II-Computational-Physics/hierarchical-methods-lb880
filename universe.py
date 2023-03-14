@@ -43,11 +43,14 @@ class Universe():
                  G = 1,
                  softening = 0.01,
                 ) -> None:
-        self.num_bodies = num_bodies
-        self.size = size
         self.dt = dt
-        self.G = G
-        self.softening = softening
+
+        self.properties = {
+            'num_bodies': num_bodies,
+            'size': size,
+            'G': G,
+            'softening': softening
+        }
 
         self.positions = np.zeros((num_bodies, 2))
         self.velocities = np.zeros((num_bodies, 2))
@@ -71,27 +74,27 @@ class Universe():
                 one central heavy mass, with the remaining masses set to orbit round
         """
         if setup == 'random':
-            for i in range(self.num_bodies):
-                r = random.uniform(0,self.size/3)
+            for i in range(self.properties['num_bodies']):
+                r = random.uniform(0,self.properties['size']/3)
                 theta = random.uniform(0,2*np.pi)
-                self.positions[i] = r * np.array([np.cos(theta),np.sin(theta)]) + np.full(2, self.size/2)
-                self.velocities[i] = np.sqrt(self.num_bodies * self.G / r) * np.array([-np.sin(theta),np.cos(theta)])
+                self.positions[i] = r * np.array([np.cos(theta),np.sin(theta)]) + np.full(2, self.properties['size']/2)
+                self.velocities[i] = np.sqrt(self.properties['num_bodies'] * self.properties['G'] / r) * np.array([-np.sin(theta),np.cos(theta)])
         elif setup == 'circle':
-            r = self.size/4
-            v = 0.3 * np.sqrt(self.G * (self.num_bodies-1) / r)
-            for i in range(self.num_bodies):
-                theta = (i/self.num_bodies) * 2 * np.pi
-                self.positions[i] = r * np.array([np.cos(theta),np.sin(theta)]) + np.full(2, self.size/2)
+            r = self.properties['size']/4
+            v = 0.3 * np.sqrt(self.properties['G'] * (self.properties['num_bodies']-1) / r)
+            for i in range(self.properties['num_bodies']):
+                theta = (i/self.properties['num_bodies']) * 2 * np.pi
+                self.positions[i] = r * np.array([np.cos(theta),np.sin(theta)]) + np.full(2, self.properties['size']/2)
                 self.velocities[i] = v * np.array([-np.sin(theta),np.cos(theta)])
         elif setup == 'orbital':
             M = 10000
             self.masses[0] = 10000
-            self.positions[0] = np.full(2, self.size/2)
-            for i in range(1, self.num_bodies):
+            self.positions[0] = np.full(2, self.properties['size']/2)
+            for i in range(1, self.properties['num_bodies']):
                 r = random.uniform(0.6,1.5)
                 theta = random.uniform(0,2*np.pi)
-                self.positions[i] = r * np.array([np.cos(theta),np.sin(theta)]) + np.full(2, self.size/2)
-                self.velocities[i] = np.sqrt(self.G * M / r) * np.array([-np.sin(theta),np.cos(theta)])
+                self.positions[i] = r * np.array([np.cos(theta),np.sin(theta)]) + np.full(2, self.properties['size']/2)
+                self.velocities[i] = np.sqrt(self.properties['G'] * M / r) * np.array([-np.sin(theta),np.cos(theta)])
         else:
             raise ValueError('Not a valid initial position setup')
         
@@ -109,16 +112,16 @@ class Universe():
         """
 
         # calculate intermediates
-        k1v = accelerations(self.num_bodies, self.G, self.softening, self.masses, self.positions) * self.dt
+        k1v = accelerations(self.properties, self.masses, self.positions) * self.dt
         k1x = self.velocities * self.dt
 
-        k2v = accelerations(self.num_bodies, self.G, self.softening, self.masses, self.positions + k1x/2) * self.dt
+        k2v = accelerations(self.properties, self.masses, self.positions + k1x/2) * self.dt
         k2x = (self.velocities + k1v/2) * self.dt
 
-        k3v = accelerations(self.num_bodies, self.G, self.softening, self.masses, self.positions + k2x/2) * self.dt
+        k3v = accelerations(self.properties, self.masses, self.positions + k2x/2) * self.dt
         k3x = (self.velocities + k2v/2) * self.dt
 
-        k4v = accelerations(self.num_bodies, self.G, self.softening, self.masses, self.positions + k3x) * self.dt
+        k4v = accelerations(self.properties, self.masses, self.positions + k3x) * self.dt
         k4x = (self.velocities + k3v) * self.dt
 
         # update to next values
@@ -130,7 +133,7 @@ class Universe():
         
         Calculates accelerations and updates using Euler
         """
-        self.velocities += self.dt * accelerations(self.num_bodies, self.G, self.softening, self.masses, self.positions)
+        self.velocities += self.dt * accelerations(self.properties, self.masses, self.positions)
         self.positions += self.dt * self.velocities
 
     def calculate_system_momentum(self) -> None:
@@ -163,7 +166,7 @@ class Universe():
         for i, pos in enumerate(body_x):
             r = pos - body_x[1:]
             mag_r = np.linalg.norm(r, axis=1).reshape((-1,1))
-            potential = - self.G * body_m[0] * body_m[1:] / mag_r
+            potential = - self.properties['G'] * body_m[0] * body_m[1:] / mag_r
 
             total_potential_energy += 0.5 * np.sum(potential)
 

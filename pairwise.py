@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 
 def calculate_accelerations(
-        num_bodies, G, softening, 
+        properties:dict,
         masses:npt.NDArray,
         positions:npt.NDArray
     ) -> npt.NDArray:
@@ -16,7 +16,8 @@ def calculate_accelerations(
 
     Parameters
     ----------
-    num_bodies, G, softening
+    properties : dict
+        dictionary of system properties
     masses : NDArray
         array of masses of all bodies
     positions : NDArray
@@ -28,7 +29,7 @@ def calculate_accelerations(
         array of velocites of all bodies
     """
 
-    accelerations = np.zeros((num_bodies, 2))
+    accelerations = np.zeros((properties['num_bodies'], 2))
 
     for i,position1 in enumerate(positions[:-1]):
         for j,position2 in enumerate(positions[i+1:], i+1):
@@ -39,7 +40,7 @@ def calculate_accelerations(
             # force felt by 1 points at 2
             # can later multiply in masses
             # softening factor ensures that distance is never close to zero => inverse finite
-            F = - (G * dir_r) / (mag_r**2 + softening**2)
+            F = - (properties['G'] * dir_r) / (mag_r**2 + properties['softening']**2)
             # calculate accelerations
             accelerations[i] += F * masses[j]
             accelerations[j] -= F * masses[i]
@@ -47,7 +48,7 @@ def calculate_accelerations(
     return accelerations
 
 def calculate_accelerations_np(
-        num_bodies, G, softening, 
+        properties:dict,
         masses:npt.NDArray,
         positions:npt.NDArray
     ) -> npt.NDArray:
@@ -61,16 +62,20 @@ def calculate_accelerations_np(
 
     Parameters
     ----------
-    body_x : numpy array
+    properties : dict
+        dictionary of system properties
+    masses : NDArray
+        array of masses of all bodies
+    positions : NDArray
         array of positions of all bodies
 
     Returns
     -------
-    body_a : numpy array
+    accelerations : NDArray
         array of velocites of all bodies
     """
     
-    accelerations = np.zeros((num_bodies,2))
+    accelerations = np.zeros((properties['num_bodies'],2))
 
     for i, pos in enumerate(positions):
         # points towards current body
@@ -80,7 +85,7 @@ def calculate_accelerations_np(
         # force felt by current body
         # can later multiply in masses
         # softening factor ensures that distance is never close to zero => inverse finite
-        F = - (G * dir_r) / (mag_r**2 + softening**2)
+        F = - (properties['G'] * dir_r) / (mag_r**2 + properties['softening']**2)
         # calculate accelerations
         accelerations[i] = np.sum(F * masses[1:], axis=0)
         # roll on the body_x

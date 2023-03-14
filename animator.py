@@ -5,7 +5,6 @@ from matplotlib.animation import FuncAnimation
 from typing import Callable
 
 from universe import Universe
-import pairwise
 
 class Animator():
     """Class to hold various animation routines"""
@@ -20,8 +19,8 @@ class Animator():
     def create_figure_for_animation(self) -> None:
         """Setup figure for animation"""
         self.fig, self.ax = plt.subplots()
-        self.ax.set_xlim(0, self.universe.size)
-        self.ax.set_ylim(0, self.universe.size)
+        self.ax.set_xlim(0, self.universe.properties['size'])
+        self.ax.set_ylim(0, self.universe.properties['size'])
         self.ax.set_aspect('equal')
 
         self.points, = self.ax.plot(self.universe.positions[:,0],
