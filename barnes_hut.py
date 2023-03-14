@@ -1,10 +1,12 @@
 import numpy as np
 
+import numpy.typing as npt
+
 class Body():
-    def __init__(self, mass, pos, vel) -> None:
+    def __init__(self, mass, pos, acc=np.zeros(2)) -> None:
         self.mass = mass
         self.pos = pos
-        self.vel = vel
+        self.acc = acc
 
 class Quadnode():
     """Quadtree that subdivides the space
@@ -105,6 +107,31 @@ class Quadnode():
                 weighted_positions[i] = child.mass * child.CoM
                 self.mass += child.mass
             self.CoM = np.sum(weighted_positions, axis=0) / self.mass
+
+def calculate_accelerations(
+        properties:dict,
+        masses:npt.NDArray,
+        positions:npt.NDArray
+    ) -> npt.NDArray:
+    """Barnes Hut acceleration calculation"""
+
+    bodies = [Body(mass, position) for mass, position in zip(masses, positions)]
+
+    quadtree = Quadnode(None, np.zeros(2), properties['size'])
+    min_size = properties['size'] / 2**8
+
+    for body in bodies:
+        quadtree.quad_insert(body, min_size)
+    
+    quadtree.calculate_com()
+
+    for body in bodies:
+        pass
+        # need to look at the quadtree and use theta parameter to see if should go deeper
+        # calculate accelerations for all the bodies, then return
+
+    accelerations = [body.acc for body in bodies]
+    return np.array(accelerations)
 
 
 def main():
