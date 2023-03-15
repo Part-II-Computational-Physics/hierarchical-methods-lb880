@@ -104,11 +104,14 @@ class Universe():
         self.calculate_system_potential_energy()
 
     def update_positions_RK4(self, accelerations:Callable) -> None:
-        """Update the positions of all bodies in the universe
-        
-        Calculates accelerations and updates using RK4
+        """Update the positions of all bodies in the universe using RK4 integration
 
-        self.body_x, self.body_v is the x_n v_n respective
+        masses, positions is the x_n v_n respective
+
+        Parameters
+        ----------
+        accelerations : Callable
+            Call signature of (properties, masses, positions)
         """
 
         # calculate intermediates
@@ -129,9 +132,14 @@ class Universe():
         self.positions += (1/6) * (k1x + 2*k2x + 2*k3x + k4x)
 
     def update_positions_euler(self, accelerations:Callable) -> None:
-        """Update the positions of all bodies in the universe
-        
-        Calculates accelerations and updates using Euler
+        """Update the positions of all bodies in the universe using Euler integration
+
+        masses, positions is the x_n v_n respective
+
+        Parameters
+        ----------
+        accelerations : Callable
+            Call signature of (properties, masses, positions)
         """
         self.velocities += self.dt * accelerations(self.properties, self.masses, self.positions)
         self.positions += self.dt * self.velocities

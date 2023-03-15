@@ -7,7 +7,15 @@ from typing import Callable
 from universe import Universe
 
 class Animator():
-    """Class to hold various animation routines"""
+    """Class to hold various animation routines
+    
+    Parameters
+    ----------
+    universe : Universe
+        the universe to animate from
+    accelerations : Callable
+        Call signature of (properties, masses, positions)
+    """
 
     def __init__(self,
                  universe: Universe,
