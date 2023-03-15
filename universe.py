@@ -91,7 +91,7 @@ class Universe():
             self.masses[0] = 10000
             self.positions[0] = np.full(2, self.properties['size']/2)
             for i in range(1, self.properties['num_bodies']):
-                r = random.uniform(0.6,1.5)
+                r = random.uniform(0.1,0.9) * self.properties['size']/2
                 theta = random.uniform(0,2*np.pi)
                 self.positions[i] = r * np.array([np.cos(theta),np.sin(theta)]) + np.full(2, self.properties['size']/2)
                 self.velocities[i] = np.sqrt(self.properties['G'] * M / r) * np.array([-np.sin(theta),np.cos(theta)])
