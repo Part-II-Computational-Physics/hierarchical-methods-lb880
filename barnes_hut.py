@@ -1,12 +1,13 @@
 import numpy as np
+import matplotlib.patches as patches
 
 import numpy.typing as npt
 
 class Body():
-    def __init__(self, mass, pos, acc=np.zeros(2)) -> None:
+    def __init__(self, mass, pos) -> None:
         self.mass = mass
         self.pos = pos
-        self.acc = acc
+        self.acc = np.zeros(2)
 
 class Quadnode():
     """Quadtree that subdivides the space
@@ -108,6 +109,36 @@ class Quadnode():
                 self.mass += child.mass
             self.CoM = np.sum(weighted_positions, axis=0) / self.mass
 
+def _accelerations_through_tree(
+        properties:dict,
+        body:Body,
+        node:Quadnode
+    ) -> None:
+    """Recursive function to go through tree until theta condition satisfied
+    
+    Considers possible acceleration from given node"""
+
+    if node.mass == 0:
+        return
+    
+    if body in node.bodies:
+        if hasattr(node, 'children'):
+            for child in node.children:
+                _accelerations_through_tree(properties, body, child)
+        return
+    
+    r = body.pos - node.CoM # points at body 
+    mag_r = np.linalg.norm(r)
+
+    # theta = side / distance to CoM
+    if hasattr(node, 'children') and (node.side / mag_r > properties['theta']): # not allowed theta
+        # further traverse tree
+        for child in node.children:
+            _accelerations_through_tree(properties, body, child)
+    else:
+        dir_r = r / mag_r
+        body.acc -= node.mass * (properties['G'] * dir_r) / (mag_r**2 + properties['softening']**2)
+
 def calculate_accelerations(
         properties:dict,
         masses:npt.NDArray,
@@ -115,32 +146,82 @@ def calculate_accelerations(
     ) -> npt.NDArray:
     """Barnes Hut acceleration calculation"""
 
+    # create body objects
     bodies = [Body(mass, position) for mass, position in zip(masses, positions)]
 
     quadtree = Quadnode(None, np.zeros(2), properties['size'])
     min_size = properties['size'] / 2**8
 
+    # fill in quadtree
     for body in bodies:
         quadtree.quad_insert(body, min_size)
     
     quadtree.calculate_com()
 
+    # calculate the accelerations
     for body in bodies:
-        pass
-        # need to look at the quadtree and use theta parameter to see if should go deeper
-        # calculate accelerations for all the bodies, then return
+        _accelerations_through_tree(properties, body, quadtree)
 
     accelerations = [body.acc for body in bodies]
     return np.array(accelerations)
 
 
+def draw_rectangles(properties:dict, positions, ax) -> list:
+    """Create list of patch artists to draw rectangles
+    
+    Not efficient as remakes quadtree each call
+    
+    Parameters
+    ----------
+    properties : dict
+        dictionary of various universe parameters
+    positions : NDArray
+        numpy array of all body positions
+    ax
+        plot axis to draw onto
+    """
+
+    # create body objects
+    bodies = [Body(1, position) for position in positions]
+
+    quadtree = Quadnode(None, np.zeros(2), properties['size'])
+    min_size = properties['size'] / 2**8
+
+    # fill in quadtree
+    for body in bodies:
+        quadtree.quad_insert(body, min_size)
+    
+    patch_artists = []
+    _create_rectangle(quadtree, patch_artists, ax)
+    return patch_artists
+
+def _create_rectangle(quadnode:Quadnode, patch_artists:list, ax):
+    """Create rectangle patches for all leaf nodes in quadtree"""
+
+    if not hasattr(quadnode, 'children'):
+        rect = patches.Rectangle(quadnode.coord, quadnode.side, quadnode.side,
+                                    linewidth=1, edgecolor='r', facecolor='none')
+        patch_artists.append(ax.add_patch(rect))
+    else:
+        for child in quadnode.children:
+            _create_rectangle(child, patch_artists, ax)
+
+def create_rectangle(quadnode:Quadnode, ax):
+    """Create rectangle patches for all leaf nodes in quadtree"""
+    if not hasattr(quadnode, 'children'):
+        rect = patches.Rectangle(quadnode.coord, quadnode.side, quadnode.side,
+                                    linewidth=1, edgecolor='r', facecolor='none')
+        ax.add_patch(rect)
+    else:
+        for child in quadnode.children:
+            create_rectangle(child, ax)
+
 def main():
     import matplotlib.pyplot as plt
-    import matplotlib.patches as patches
 
     body_list = []
     total_size = 1
-    num_bodies = 10
+    num_bodies = 100
     for _ in range(num_bodies):
         body_list.append(Body(1, np.array([np.random.uniform(0, total_size), np.random.uniform(0, total_size)]), np.zeros(2)))
 
@@ -161,17 +242,7 @@ def main():
     ax.set_ylim(0, total_size)
     ax.set_aspect('equal')
 
-    def create_rectangle(quadnode:Quadnode):
-        """Create rectangle patches for all leaf nodes in quadtree"""
-        if not hasattr(quadnode, 'children'):
-            rect = patches.Rectangle(quadnode.coord, quadnode.side, quadnode.side,
-                                     linewidth=1, edgecolor='r', facecolor='none')
-            ax.add_patch(rect)
-        else:
-            for child in quadnode.children:
-                create_rectangle(child)
-
-    create_rectangle(quadtree)
+    create_rectangle(quadtree, ax)
 
     plt.show()
     

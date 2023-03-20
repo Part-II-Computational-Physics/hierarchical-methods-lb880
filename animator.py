@@ -5,6 +5,7 @@ from matplotlib.animation import FuncAnimation
 from typing import Callable
 
 from universe import Universe
+import barnes_hut
 
 class Animator():
     """Class to hold various animation routines
@@ -46,12 +47,33 @@ class Animator():
                              self.universe.positions[:,1])
 
         return self.points,
+
+    def animate_draw_barnes_hut(self, i):
+        patch_artists = barnes_hut.draw_rectangles(self.universe.properties, self.universe.positions, self.ax)
+
+        self.universe.update_positions_RK4(self.accelerations)
+
+        self.universe.calculate_system_momentum()
+        self.universe.calculate_system_kinetic_energy()
+        self.universe.calculate_system_potential_energy()
+
+        self.points.set_data(self.universe.positions[:,0],
+                             self.universe.positions[:,1])
+
+        return self.points, *patch_artists, 
     
-    def produce_animation(self, with_momentum_energy:bool):
+    def produce_animation(self,
+                          with_momentum_energy:bool,
+                          draw_barnes_hut:bool):
         """Produce animation, then plot p, KE, PE after"""
 
+        if draw_barnes_hut:
+            animate = self.animate_draw_barnes_hut
+        else:
+            animate = self.animate
+
         self.anim = FuncAnimation(self.fig,
-                                  self.animate,
+                                  animate,
                                   100,
                                   interval=5*self.universe.dt,
                                   blit=True)

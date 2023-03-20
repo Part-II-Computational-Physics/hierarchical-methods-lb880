@@ -36,21 +36,24 @@ class Universe():
         Calc the various properies
     """
 
-    def __init__(self,
-                 num_bodies,
-                 size = 1,
-                 dt = 1,
-                 G = 1,
-                 softening = 0.01,
-                ) -> None:
+    def __init__(
+            self,
+            num_bodies,
+            size = 1,
+            dt = 1,
+            G = 1,
+            softening = 0.01,
+            **kwargs
+        ) -> None:
         self.dt = dt
 
-        self.properties = {
+        self.properties = kwargs
+        self.properties.update({
             'num_bodies': num_bodies,
             'size': size,
             'G': G,
             'softening': softening
-        }
+        })
 
         self.positions = np.zeros((num_bodies, 2))
         self.velocities = np.zeros((num_bodies, 2))
