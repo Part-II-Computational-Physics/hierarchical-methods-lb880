@@ -1,6 +1,9 @@
+FMM method
+
+assign acceleration function to universe class instead of constantly passing around
+    should be a bit cleaner
+
 calculate accelerations using more numpy
     not really useful as order N method
 
 3D
-
-start on actual approx methods
