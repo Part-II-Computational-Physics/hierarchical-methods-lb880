@@ -7,7 +7,7 @@ class Source():
         self.pos = pos
 
 class Ibox():
-    """Currently for 1/r force (log(r) potentials)
+    """For 1/r force (log(r) potentials)
     
     Attributes
     ----------
@@ -16,7 +16,7 @@ class Ibox():
     """
 
     def __init__(self, p, l, side, centre) -> None:
-        """level l and box i
+        """level l
         
         Parameters
         ----------
@@ -32,7 +32,7 @@ class Ibox():
 
         self.children = []
 
-        self.multipole_coefficients = np.zeros(p+1)
+        self.multipole_coefficients = np.zeros(p+1, dtype=complex)
 
     def __repr__(self) -> str:
         string = f'Ibox lvl {self.l}'
@@ -42,12 +42,12 @@ class Ibox():
     
     def print_tree_coefficients(self, level=0):
         string = level*'\t' + self.__repr__()
-        string += f' Coeffs: {self.multipole_coefficients}'
+        string += f' Coeffs: {[coeff for coeff in self.multipole_coefficients]}'
         print(string)
         for child in self.children:
             child.print_tree_coefficients(level+1)
 
-    def downward_pass(self, p:int, l_max:int, sources) -> None:
+    def upward_pass(self, p:int, l_max:int, sources) -> None:
         """Create children recursively for the given ibox at the next level, until l_max
         
         Parameters
@@ -68,7 +68,7 @@ class Ibox():
         self.children = [Ibox(p, self.l+1, self.side/2, centre) for centre in centres]
         
         for child in self.children:
-            child.downward_pass(p, l_max, sources)
+            child.upward_pass(p, l_max, sources)
             self.M2M(child)
 
     def create_multipole_expansion(self, sources) -> None:
@@ -90,9 +90,11 @@ class Ibox():
             return
 
         # get multipole coefficients
+        # Q
         self.multipole_coefficients[0] = np.sum(sources[:,0])
+        # a_k
         for k in range(1, len(self.multipole_coefficients)):
-            self.multipole_coefficients[k] = np.sum(-sources[:,0] * sources[:,1]**k / k)
+            self.multipole_coefficients[k] = np.sum(-sources[:,0] * (sources[:,1]-self.centre)**k / k)
 
     def M2M(self, child):
         """Perform M2M method"""
@@ -108,7 +110,7 @@ class Ibox():
                              * z0**(l-np.arange(1,l,1)) \
                              * sp.special.binom(l-1, np.arange(0,l-1,1)))
             
-    def upward_pass():
+    def downward_pass():
         pass
 
 
@@ -123,25 +125,32 @@ def main():
 
     for i in range(N):
         # charge
-        sources[i,0] = 1.
+        sources[i,0] = 2 * np.random.randint(2) - 1
+        # position (complex)
         sources[i,1] = np.random.rand() + 1j*np.random.rand()
-
-    print(sources)
+    
+    # sources[0] = np.array([1, 0.25*(1+1j)])
+    # sources[1] = np.array([2, 0.25*(3+1j)])
+    # sources[2] = np.array([-2, 0.25*(1+3j)])
+    # sources[3] = np.array([-3, 0.25*(3+3j)])
+    # print(sources)
 
     top_ibox = Ibox(p, 0, 1, 0.5+0.5j)
     
-    top_ibox.downward_pass(p, n, sources)
-    top_ibox.print_tree_coefficients()
+    top_ibox.upward_pass(p, n, sources)
+    # top_ibox.print_tree_coefficients()
 
     # plot points
     import matplotlib.pyplot as plt
 
-    complex_points = [source[1] for source in sources]
+    colors = ['r' if charge==1 else 'b' for charge in sources[:,0]]
+    complex_points = [position for position in sources[:,1]]
     X = np.real(complex_points)
     Y = np.imag(complex_points)
 
     fig, ax = plt.subplots()
-    ax.plot(X, Y, 'o')
+    print(colors)
+    ax.scatter(X, Y,c=colors)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.set_aspect('equal')
