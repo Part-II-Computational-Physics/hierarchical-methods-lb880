@@ -1,4 +1,5 @@
 FMM method
+    add in max recursion depth fallback
 
 assign acceleration function to universe class instead of constantly passing around
     should be a bit cleaner
