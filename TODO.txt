@@ -1,5 +1,6 @@
 FMM method
-    add in max recursion depth fallback
+    properly define the precision number (probably more in accordance with the paper)
+    check where expansion values are wrong
 
 assign acceleration function to universe class instead of constantly passing around
     should be a bit cleaner
