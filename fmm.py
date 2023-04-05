@@ -62,6 +62,9 @@ class Particle(Point):
 
         self.potential:float = 0.0
 
+    def __repr__(self) -> str:
+        return f'Particle: {self.centre}, charge {self.charge}'
+
     
 class Cell(Point):
     """Class for cells that tree constructed from
@@ -286,7 +289,7 @@ class Cell(Point):
 
 
     def _M2L(self, interactor:'Cell') -> None:
-        """Calculate local expansion for a given cell, due to own multipole
+        """Calculate local expansion for a given cell, due to interactors multipoles
         """
 
         z0 = interactor.centre - self.centre # local expansion 'about origin' (so about self)
@@ -296,7 +299,7 @@ class Cell(Point):
         minus_and_plus[1::2] = 1
 
         k_vals = np.arange(1, self.precision)
-        l_vals = np.arange(1,self.precision)
+        l_vals = np.arange(1, self.precision)
 
         minus_bk_over_z0k = minus_and_plus * interactor.multipole[1:] / z0**k_vals
 
@@ -312,7 +315,7 @@ class Cell(Point):
             if child:
                 z0 = child.centre - self.centre
 
-                k_vals = np.arange(self.precision-1)
+                k_vals = np.arange(1,self.precision)
 
                 for l in range(self.precision):
                     child.local[l] += np.sum(self.local[1:] * sp.special.binom(k_vals, l) * z0**(k_vals-l))
