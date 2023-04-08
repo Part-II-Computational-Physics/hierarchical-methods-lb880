@@ -246,7 +246,7 @@ def calculate_multipole(precision: int, particle: Particle, cell: Tuple[int],
     array[cell][2:precision+1] -= particle.charge * z0**k_vals / k_vals
 
 
-def _cell_M2M(precision: int, cell: Tuple[int],
+def cell_M2M(precision: int, cell: Tuple[int],
              array: NDArray, child_array: NDArray) -> None:
     """Perform M2M from children for a given cell to calculate its multipole
     
@@ -299,7 +299,7 @@ def level_M2M(precision: int, level: int,
     # ################################################
     for x in range(2**level):
         for y in range(2**level):
-            _cell_M2M(precision, (x,y), array, child_array)
+            cell_M2M(precision, (x,y), array, child_array)
 
 def cell_M2L(precision: int, cell: Tuple[int], interactor: Tuple[int],
              array: NDArray) -> None:
