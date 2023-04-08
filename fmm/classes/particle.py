@@ -14,7 +14,7 @@ class Particle():
         To store evaluated potential
     """
 
-    def __init__(self, charge: float=None, centre: complex=None) -> None:
+    def __init__(self, charge: float = None, centre: complex = None) -> None:
         if centre:
             self.centre: complex = centre
         else:

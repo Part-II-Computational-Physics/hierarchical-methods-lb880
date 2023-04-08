@@ -3,11 +3,11 @@ import numpy as np
 from typing import List, Set
 from numpy.typing import NDArray
 
-from .classes.particle import Particle
+from .classes import Particle
 
-from .coord_tools import get_particle_cell, get_neighbours
-from .cell_tools import calculate_multipole
-from .level_tools import level_M2M, level_M2L, level_L2L
+from . import coord_tools
+from . import cell_tools
+from . import level_tools
 
 
 def create_expansion_arrays(precision: int, max_level: int) -> List[NDArray]:
@@ -78,8 +78,8 @@ def insert_particles(precision: int, level: int, particles:List[Particle],
                        for _ in range(2**level)]
 
     for particle in particles:
-        cell = get_particle_cell(particle, level)
-        calculate_multipole(precision, particle, cell, array)
+        cell = coord_tools.get_particle_cell(particle, level)
+        cell_tools.calculate_multipole(precision, particle, cell, array)
         # add particle to the array
         level_particles[cell[0]][cell[1]].add(particle)
     
@@ -102,8 +102,8 @@ def upward_pass(precision: int, expansion_arrays: List[NDArray]) -> None:
 
     # Starts at second to max level, and then goes upwards up to the 0th level
     for level in range(len(expansion_arrays)-2, -1, -1):
-        level_M2M(precision, level,
-                  expansion_arrays[level], expansion_arrays[level+1])
+        level_tools.M2M(precision, level,
+                        expansion_arrays[level], expansion_arrays[level+1])
 
 def downward_pass(precision: int, expansion_arrays: List[NDArray]) -> None:
     """Perform downward pass on the expansion arrays to calculate all of the
@@ -128,12 +128,12 @@ def downward_pass(precision: int, expansion_arrays: List[NDArray]) -> None:
     # first two levels have zero local, as no interaction list
     for level in range(2, max_level):
         # interaction list contributions
-        level_M2L(precision, level, expansion_arrays[level])
+        level_tools.M2L(precision, level, expansion_arrays[level])
         # distribute to children
-        level_L2L(precision, level, expansion_arrays[level], expansion_arrays[level+1])
+        level_tools.L2L(precision, level, expansion_arrays[level], expansion_arrays[level+1])
 
     # no L2L for finest level, no children
-    level_M2L(precision, max_level, expansion_arrays[max_level])
+    level_tools.M2L(precision, max_level, expansion_arrays[max_level])
 
 
 def evaluate_particle_potentials(precision: int, max_level: int,
@@ -170,7 +170,7 @@ def evaluate_particle_potentials(precision: int, max_level: int,
             # near particles are those in the cell and its neighbours
             near_particles = set()
             for neighbour_set in [finest_particles[xn][yn] 
-                                  for xn,yn in get_neighbours((x,y), max_level)
+                                  for xn,yn in coord_tools.get_neighbours((x,y), max_level)
                                  ]:
                 near_particles.update(neighbour_set)
             near_particles.update(cell_particles)

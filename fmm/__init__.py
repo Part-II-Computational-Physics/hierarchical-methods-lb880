@@ -1,3 +1,3 @@
-from .classes.particle import Particle
+from .classes import Particle
 
 from .main import *

@@ -1,9 +1,9 @@
 from numpy.typing import NDArray
 
-from .coord_tools import get_interaction_list
-from .cell_tools import cell_M2M, cell_M2L, cell_L2L
+from . import coord_tools
+from . import cell_tools
 
-def level_M2M(precision: int, level: int,
+def M2M(precision: int, level: int,
               array: NDArray, child_array: NDArray) -> None:
     """Perform M2M to calculate multipoles of a given level
     due to the multipoles in the child level
@@ -26,9 +26,9 @@ def level_M2M(precision: int, level: int,
     # ################################################
     for x in range(2**level):
         for y in range(2**level):
-            cell_M2M(precision, (x,y), array, child_array)
+            cell_tools.M2M(precision, (x,y), array, child_array)
 
-def level_M2L(precision: int, level: int, array: NDArray) -> None:
+def M2L(precision: int, level: int, array: NDArray) -> None:
     """Perform M2L to calculate locals of a given level due to the multipoles of
     interactors on the level
     
@@ -45,10 +45,10 @@ def level_M2L(precision: int, level: int, array: NDArray) -> None:
 
     for x in range(2**level):
         for y in range(2**level):
-            for interactor in get_interaction_list((x,y), level):
-                cell_M2L(precision,(x,y),interactor,array)
+            for interactor in coord_tools.get_interaction_list((x,y), level):
+                cell_tools.M2L(precision,(x,y),interactor,array)
 
-def level_L2L(precision: int, level: int,
+def L2L(precision: int, level: int,
               matrix: NDArray, child_matrix:NDArray) -> None:
     """Perform L2L to distribute local expansions of a given level to children
     level
@@ -68,4 +68,4 @@ def level_L2L(precision: int, level: int,
 
     for x in range(2**level):
         for y in range(2**level):
-            cell_L2L(precision, (x,y), matrix, child_matrix)
+            cell_tools.L2L(precision, (x,y), matrix, child_matrix)

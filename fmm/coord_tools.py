@@ -1,6 +1,6 @@
 from typing import List, Tuple, Set
 
-from .classes.particle import Particle
+from .classes import Particle
 
 def get_children(parent_coords: Tuple[int]) -> List[Tuple[int]]:
     """Returns children coordinates given parent coordinates
