@@ -78,10 +78,10 @@ class Universe():
         """
         if setup == 'random':
             for i in range(self.properties['num_bodies']):
-                r = random.uniform(0,self.properties['size']/3)
-                theta = random.uniform(0,2*np.pi)
-                self.positions[i] = r * np.array([np.cos(theta),np.sin(theta)]) + np.full(2, self.properties['size']/2)
-                self.velocities[i] = np.sqrt(self.properties['num_bodies'] * self.properties['G'] / r) * np.array([-np.sin(theta),np.cos(theta)])
+                x = random.uniform(-self.properties['size'],self.properties['size']) / 4
+                y = random.uniform(-self.properties['size'],self.properties['size']) / 4
+                self.positions[i] = np.array([x,y]) + np.full(2, self.properties['size']/2)
+
         elif setup == 'circle':
             r = self.properties['size']/4
             v = 0.3 * np.sqrt(self.properties['G'] * (self.properties['num_bodies']-1) / r)
@@ -89,6 +89,7 @@ class Universe():
                 theta = (i/self.properties['num_bodies']) * 2 * np.pi
                 self.positions[i] = r * np.array([np.cos(theta),np.sin(theta)]) + np.full(2, self.properties['size']/2)
                 self.velocities[i] = v * np.array([-np.sin(theta),np.cos(theta)])
+
         elif setup == 'orbital':
             M = 10000
             self.masses[0] = 10000
@@ -98,6 +99,20 @@ class Universe():
                 theta = random.uniform(0,2*np.pi)
                 self.positions[i] = r * np.array([np.cos(theta),np.sin(theta)]) + np.full(2, self.properties['size']/2)
                 self.velocities[i] = np.sqrt(self.properties['G'] * M / r) * np.array([-np.sin(theta),np.cos(theta)])
+
+        elif setup == 'two orbit':
+            M = 10000
+            self.masses[0] = 10000
+            self.positions[0] = np.full(2, self.properties['size']/4)
+            self.masses[1] = 10000
+            self.positions[1] = np.full(2, 3* self.properties['size']/4)
+            for i in range(2, self.properties['num_bodies']):
+                r = random.uniform(0.1,0.9) * self.properties['size']/4
+                theta = random.uniform(0,2*np.pi)
+                which_centre = np.random.random_integers(0,1)
+                self.positions[i] = r * np.array([np.cos(theta),np.sin(theta)]) + ((1+2*which_centre) * np.full(2, self.properties['size']/4))
+                self.velocities[i] = np.sqrt(self.properties['G'] * M / r) * np.array([-np.sin(theta),np.cos(theta)])
+
         else:
             raise ValueError('Not a valid initial position setup')
         
