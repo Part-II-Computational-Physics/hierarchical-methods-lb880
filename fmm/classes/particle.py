@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ['Particle']
+
 class Particle():
     """Sources to calculate multipoles from
     

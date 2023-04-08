@@ -1,11 +1,15 @@
+"""Cell operation tools"""
+
 import numpy as np
 from scipy.special import binom
 
 from typing import Tuple
 from numpy.typing import NDArray
 
-from .classes import Particle
-from . import coord_tools
+from ..classes import Particle
+from .. import tools
+
+__all__ = ['calculate_multipole', 'M2M', 'M2L', 'L2L']
 
 def calculate_multipole(precision: int, particle: Particle, cell: Tuple[int],
                         array: NDArray) -> None:
@@ -48,7 +52,7 @@ def M2M(precision: int, cell: Tuple[int],
         Expansion array in which the children exist
     """
 
-    for child in coord_tools.get_children(cell):
+    for child in tools.coord.children(cell):
         child_multipole = child_array[child][1:precision+1]
 
         array[cell][1] += child_multipole[0]
@@ -118,7 +122,7 @@ def L2L(precision: int, cell: Tuple[int],
         Expansion array in which the children exist
     """
     
-    for child in coord_tools.get_children(cell):
+    for child in tools.coord.children(cell):
         z0 = child_array[child][0] - array[cell][0]
 
         # ################################################

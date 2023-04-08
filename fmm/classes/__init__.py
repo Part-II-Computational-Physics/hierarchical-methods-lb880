@@ -1,1 +1,1 @@
-from particle import Particle
+from .particle import Particle

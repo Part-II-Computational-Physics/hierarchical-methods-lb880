@@ -1,8 +1,13 @@
+"""Array index coordinate operations"""
+
 from typing import List, Tuple, Set
 
-from .classes import Particle
+from ..classes import Particle
 
-def get_children(parent_coords: Tuple[int]) -> List[Tuple[int]]:
+__all__ = ['children', 'parent', 'neighbours', 'interaction_list',
+           'particle_cell']
+
+def children(parent_coords: Tuple[int]) -> List[Tuple[int]]:
     """Returns children coordinates given parent coordinates
     
     (Coordinates are matrix indicies)
@@ -14,7 +19,7 @@ def get_children(parent_coords: Tuple[int]) -> List[Tuple[int]]:
     
     Returns
     -------
-    child_coords : List[Tuple[int]]
+    child_coords : Set[Tuple[int]]
         List of matrix indicies of children
     """
 
@@ -26,7 +31,7 @@ def get_children(parent_coords: Tuple[int]) -> List[Tuple[int]]:
         (x*2+1, y*2+1)
     ]
 
-def get_parent(child_coords: Tuple[int]) -> Tuple[int]:
+def parent(child_coords: Tuple[int]) -> Tuple[int]:
     """Returns parent coordinates given child coordinates
     
     (Coordinates are matrix indicies)
@@ -44,7 +49,7 @@ def get_parent(child_coords: Tuple[int]) -> Tuple[int]:
 
     return (child_coords[0]//2, child_coords[1]//2)
 
-def get_neighbours(cell_coords: Tuple[int], level: int) -> Set[Tuple[int]]:
+def neighbours(cell_coords: Tuple[int], level: int) -> Set[Tuple[int]]:
     """Returns nearest neighbour coordinates given cell coordinates
     
     (Coordinates are matrix indicies)
@@ -94,7 +99,7 @@ def get_neighbours(cell_coords: Tuple[int], level: int) -> Set[Tuple[int]]:
     
     return neighbours
 
-def get_interaction_list(cell_coords: Tuple[int], level: int
+def interaction_list(cell_coords: Tuple[int], level: int
                          ) -> Set[Tuple[int]]:
     """Returns nearest neighbour coordinates given cell coordinates
     
@@ -117,15 +122,15 @@ def get_interaction_list(cell_coords: Tuple[int], level: int
     if level <= 1:
         return set()
     
-    neighbours = get_neighbours(cell_coords, level)
-    parent_neighbours = get_neighbours(get_parent(cell_coords), level-1)
+    neighbours = neighbours(cell_coords, level)
+    parent_neighbours = neighbours(parent(cell_coords), level-1)
     all_possible = set()
     for p_n in parent_neighbours:
-        all_possible.update(get_children(p_n))
+        all_possible.update(children(p_n))
 
     return all_possible - neighbours
 
-def get_particle_cell(particle: Particle, level: int) -> Tuple[int]:
+def particle_cell(particle: Particle, level: int) -> Tuple[int]:
     """Returns cell coordinates in which the given particle lies
     
     (Coordinates are matrix indicies)

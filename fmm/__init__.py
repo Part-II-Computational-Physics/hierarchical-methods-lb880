@@ -1,3 +1,7 @@
+"""Package for the FMM method"""
+
+from . import tools
+
 from .classes import Particle
 
-from .main import *
+from .fmm import *
