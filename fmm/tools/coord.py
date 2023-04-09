@@ -7,6 +7,7 @@ from ..classes import Particle
 __all__ = ['children', 'parent', 'neighbours', 'interaction_list',
            'particle_cell']
 
+
 def children(parent_coords: Tuple[int]) -> List[Tuple[int]]:
     """Returns children coordinates given parent coordinates
     

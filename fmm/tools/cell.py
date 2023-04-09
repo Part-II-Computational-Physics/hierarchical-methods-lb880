@@ -11,6 +11,7 @@ from .. import tools
 
 __all__ = ['calculate_multipole', 'M2M', 'M2L', 'L2L']
 
+
 def calculate_multipole(precision: int, particle: Particle, cell: Tuple[int],
                         array: NDArray) -> None:
     """Update the relevant cell in given level with multipole due to particle
@@ -32,7 +33,7 @@ def calculate_multipole(precision: int, particle: Particle, cell: Tuple[int],
 
     # remaining terms
     z0 = particle.centre - array[cell][0]
-    k_vals = np.arange(1,precision)
+    k_vals = np.arange(1, precision)
     array[cell][2:precision+1] -= particle.charge * z0**k_vals / k_vals
 
 
@@ -133,11 +134,3 @@ def L2L(precision: int, cell: Tuple[int],
                 child_array[child][precision+1+l] += \
                     array[cell][precision+1+k] * binom(k,l) * z0**(k-l)
                 
-        # l_vals = np.arange(precision)
-        # k_vals = np.arange(1,precision)
-
-        # child_matrix[child][precision+1:] += np.sum(
-        #         matrix[cell][precision+2] * \
-        #           binom(k_vals, l_vals[:,np.newaxis]) \
-        #           * z0**(k_vals - l_vals[:,np.newaxis])
-        #     ,axis=1)
