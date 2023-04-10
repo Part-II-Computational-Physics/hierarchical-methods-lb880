@@ -211,7 +211,7 @@ def do_fmm(precision: int, particles: List[Particle],
         process. Default of False (does not change the potentials)
     """
 
-    max_level = len(expansion_arrays)
+    max_level = len(expansion_arrays) - 1
 
     if zero_potentials:
         for particle in particles:

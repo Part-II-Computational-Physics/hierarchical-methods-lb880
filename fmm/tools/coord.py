@@ -123,13 +123,12 @@ def interaction_list(cell_coords: Tuple[int], level: int
     if level <= 1:
         return set()
     
-    neighbours = neighbours(cell_coords, level)
     parent_neighbours = neighbours(parent(cell_coords), level-1)
     all_possible = set()
     for p_n in parent_neighbours:
         all_possible.update(children(p_n))
 
-    return all_possible - neighbours
+    return all_possible - neighbours(cell_coords, level)
 
 def particle_cell(particle: Particle, level: int) -> Tuple[int]:
     """Returns cell coordinates in which the given particle lies
