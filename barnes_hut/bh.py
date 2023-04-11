@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import scipy as sp
 from scipy import sparse
@@ -64,6 +65,37 @@ class Particle(Point):
 
     def __repr__(self) -> str:
         return f'Particle: {self.centre}, charge {self.charge}'
+    
+# class Particle():
+#     """Sources to calculate multipoles from
+    
+#     Attributes
+#     ----------
+#     centre : complex
+#         Coords of point, random if no argument given
+#     charge : float
+#         Charge associated with the point, real number,
+#         if no argument given, random in range [-1,1)
+#     potential : float
+#         To store evaluated potential
+#     """
+
+#     def __init__(self, charge: float = None, centre: complex = None) -> None:
+#         if centre:
+#             self.centre: complex = centre
+#         else:
+#             self.centre: complex = np.random.random() + 1j*np.random.random()
+
+#         if charge:
+#             self.charge: float = charge
+#         else:
+#             # random in range -1 to 1
+#             self.charge: float = 2*np.random.random() - 1
+
+#         self.potential: float = 0.0
+
+#     def __repr__(self) -> str:
+#         return f'Particle: {self.centre}, charge {self.charge}'
 
     
 class Cell(Point):
@@ -95,20 +127,6 @@ class Cell(Point):
         child locations eg, child in 2 and 4 is 1010
     children : array of Cells
         cells children
-    
-    nearest_neighbours : set
-        set of the nearest neighbours to the cell,
-        initialised to set()
-    interaction_list : set
-        set of interaction list for the cell,
-        initialised to set()
-
-    precision : int
-        number of terms in multipole expansion
-    multipole : NDArray of complex
-        coefficients of the multipole expansion
-    local : NDArray of complex
-        coefficients of the multipole local
 
     Methods
     -------
@@ -121,7 +139,6 @@ class Cell(Point):
     def __init__(self,
                  centre:complex,
                  size:float,
-                 precision:int,
                  parent:'Cell'=None) -> None:
         
         super().__init__(centre)
@@ -144,13 +161,6 @@ class Cell(Point):
 
         self.bit_children:int = 0 # 0000, bitwise operations
         self.children:NDArray[+'Cell'] = np.zeros(4, dtype=object)
-
-        self.nearest_neighbours:Set['Cell'] = set()
-        self.interaction_list:Set['Cell'] = set()
-
-        self.precision:int = precision
-        self.multipole:NDArray[+complex] = np.zeros(precision, dtype=complex)
-        self.local:NDArray[+complex] = np.zeros(precision, dtype=complex)
 
     def __repr__(self) -> str:
         return f'Cell lvl{self.level}: {self.centre} {self.n_particles} particle'
@@ -177,7 +187,6 @@ class Cell(Point):
         # add child to array of children, in correct location
         self.children[quadrant] = Cell(child_centre,
                                         self.size/2,
-                                        self.precision,
                                         self)
         self.bit_children += (1<<quadrant)
 
@@ -227,98 +236,19 @@ class Cell(Point):
             # add particle to child
             self.children[quadrant]._add_particle(particle,n_crit,max_level,cells)
 
-
-    def _calculate_multipole(self) -> None:
-        """Explicit calculation of multipole coeffs due to constituent particles"""
-        charges = np.array([particle.charge for particle in self.particles])
-        positions = np.array([particle.centre for particle in self.particles])
-        # Q
-        self.multipole[0] = np.sum(charges)
-        # a_k
-        for k in range(1, self.precision):
-            self.multipole[k] = np.sum(-charges * (positions-self.centre)**k / k)
     
-    def _M2M(self, child:'Cell') -> None:
-        """Perform M2M method"""
-
-        z0 = child.centre - self.centre
-
-        self.multipole[0] += child.multipole[0]
-
-        for l in range(1, self.precision):
-            # bl = - child.multipole[0] * z0**l / l
-            # for k in range(1,l+1):
-            #     bl += child.multipole[k] * z0**(l-k) * sp.special.binom(l-1,k-1)
-            # self.multipole[l] += bl
-
-            self.multipole[l] += \
-                -(child.multipole[0] * z0**l / l) \
-                    + np.sum(child.multipole[1:l+1] \
-                             * z0**(l-np.arange(1,l+1,1)) \
-                             * sp.special.binom(l-1, np.arange(0,l,1)))
-
-    def _get_multipole(self) -> None:
-        """Either use M2M or calculation to get multipole of cell"""
-
-        if self.bit_children == 0: # leaf
-            self._calculate_multipole()
-        else: # branch
-            for child in self.children:
-                if child:
-                    self._M2M(child)
-
-
-    def _get_nearest_neighbours(self, level_matrix, cells:List['Cell']) -> None:
-        """Gets cells nearest neighbours and stores in attribute
-        """
-
-        # SEVERE HACK
-        # -----------
-        # Matricies are one bigger than required at each level, hence reference to
-        #   +1 and -1 from the true edge will give 0 still 
-        self.nearest_neighbours = {
-            cells[level_matrix[self.level_coords[0]-1, self.level_coords[1]-1]],
-            cells[level_matrix[self.level_coords[0]  , self.level_coords[1]-1]],
-            cells[level_matrix[self.level_coords[0]+1, self.level_coords[1]-1]],
-            cells[level_matrix[self.level_coords[0]-1, self.level_coords[1]  ]],
-            cells[level_matrix[self.level_coords[0]+1, self.level_coords[1]  ]],
-            cells[level_matrix[self.level_coords[0]-1, self.level_coords[1]+1]],
-            cells[level_matrix[self.level_coords[0]  , self.level_coords[1]+1]],
-            cells[level_matrix[self.level_coords[0]+1, self.level_coords[1]+1]],
-        } - {None}
-
-
-    def _M2L(self, interactor:'Cell') -> None:
-        """Calculate local expansion for a given cell, due to interactors multipoles
-        """
-
-        z0 = interactor.centre - self.centre # local expansion 'about origin' (so about self)
-
-        minus_and_plus = np.empty(self.precision-1)
-        minus_and_plus[::2] = -1
-        minus_and_plus[1::2] = 1
-
-        k_vals = np.arange(1, self.precision)
-        l_vals = np.arange(1, self.precision)
-
-        minus_bk_over_z0k = minus_and_plus * interactor.multipole[1:] / z0**k_vals
-
-        self.local[0] += interactor.multipole[0] * np.log(-z0) + np.sum(minus_bk_over_z0k)
-        self.local[1:] += interactor.multipole[0] / (l_vals * z0**l_vals) \
-                            + (1/z0**l_vals) * np.sum(minus_bk_over_z0k * sp.special.binom(l_vals + k_vals - 1, k_vals-1))
+    def _get_Mass_and_CoM(self) -> None:
+        if not self.bit_children: # leaf
+            masses = np.array([particle.charge for particle in self.particles])
+            centres = np.array([particle.centre for particle in self.particles])
         
-    def _L2L(self) -> None:
-        """Distribute local expansion to child cells"""
-        if self.bit_children == 0:
-            return
-        for child in self.children:
-            if child:
-                z0 = child.centre - self.centre
+        else: # has children to 'take' CoM from
+            masses = np.array([child.total_mass for child in self.children if child])
+            centres = np.array([child.CoM for child in self.children if child])
 
-                k_vals = np.arange(1,self.precision)
-
-                for l in range(self.precision):
-                    child.local[l] += np.sum(self.local[1:] * sp.special.binom(k_vals, l) * z0**(k_vals-l))
+        # calculate total mass and centre of mass
+        self.total_mass = np.sum(masses)
+        self.CoM = np.sum(masses * centres) / self.total_mass
 
 
 class RootCell(Cell):
@@ -338,14 +268,14 @@ class RootCell(Cell):
     def __init__(self,
                  centre:complex,
                  size:float,
-                 precision:int,
-                 max_level:int) -> None:
+                 max_level:int,
+                 theta:float) -> None:
         
-        super().__init__(centre, size, precision)
+        super().__init__(centre, size)
 
         self.max_level:int = max_level
+        self.theta: float = theta
         self.cells:List[Cell] = [self]
-        self.level_matricies = [sparse.lil_matrix((2**l+1,2**l+1),dtype=int) for l in range(max_level+1)]
 
     
     def populate_with_particles(self, particles:List[Particle], n_crit:int=2):
@@ -361,164 +291,53 @@ class RootCell(Cell):
         #                       self.max_level,
         #                       self.cells)
 
-
-    def zero_multipole_and_local(self):
-        def zero_cell(cell:Cell):
-            cell.multipole = np.zeros(cell.precision, dtype=complex)
-            cell.local = np.zeros(cell.precision, dtype=complex)
-
-            if cell.bit_children !=0:
-                for child in cell.children:
-                    if child:
-                        zero_cell(child)
-        
-        zero_cell(self)
-
-
-    def populate_multipoles(self) -> None:
+    def populate_mass_CoM(self):
+        # iterate from leaf nodes first
         for cell in reversed(self.cells):
-            cell._get_multipole()
-
-
-    def populate_level_matricies(self):
-        """Populate level matricies
-
-        Each matrix has the index of the relevant Cell from cells list
-        """
-        
-        # SEVERE HACK
-        # -----------
-        # Matricies are one bigger than required at each level, hence reference to
-        #   +1 and -1 from the true edge will give 0 still
-        # also want to make this process more efficient
-        for i,cell in enumerate(self.cells):
-            self.level_matricies[cell.level][cell.level_coords] = i
-
-
-    def populate_nearest_neighbours(self):
-        cells = [0] + self.cells[1:] # sets first to None as a 0 in cell_matricies corresponds to no Cell
-
-        def iterate_nearest_neighbours(level:int, cell:Cell):
-            cell._get_nearest_neighbours(self.level_matricies[level], cells)
-
-            if cell.bit_children != 0:
-                for child in cell.children:
-                    if child:
-                        iterate_nearest_neighbours(level+1, child)
-
-        root_children = {child for child in self.children if child}
-
-        # root has no nearest neighbours
-        for child in self.children:
-            if child:
-                # second level down is just sisters
-                child.nearest_neighbours = root_children - {child}
-                if child.bit_children != 0:
-                    for grandchild in child.children:
-                        if grandchild:
-                            iterate_nearest_neighbours(2, grandchild)
-
-
-    def populate_interaction_lists(self):
-        """Interaction list is cells in parents neighbours that are not your own neigbours"""
-
-        def child_interaction_list(parent_nearest_neighbours:Set[Cell], cell:Cell):
-            all_cells = set()
-            for nn in parent_nearest_neighbours:
-                if nn:
-                    all_cells.update({child for child in nn.children if child})
-            
-            cell.interaction_list = all_cells - cell.nearest_neighbours
-
-            for child in cell.children:
-                if child:
-                    child_interaction_list(cell.nearest_neighbours, child)
-
-        # root has no interaction list, and second level down is just sisters
-        for child in self.children:
-            if child:
-                child_interaction_list(set(), child)
-
-
-    def populate_locals(self) -> None:
-        """Populate the relevant local coefficients for all cells in tree
-        
-        Expansion is zero for both root and all its children (as no interaction list)
-        """
-
-        def local_work(cell:Cell):
-            # get local from interaction list
-            for interactor in cell.interaction_list:
-                cell._M2L(interactor)
-
-            # distribute to child cells
-            cell._L2L()
-
-            if cell.bit_children == 0:
-                return
-            # iterate through children
-            for child in cell.children:
-                if child:
-                    local_work(child)
-
-        for child in self.children:
-            if child:
-                if child.bit_children != 0:
-                    for grandchild in child.children:
-                        if grandchild:
-                            local_work(child)
-
-
-    def get_particle_potentials(self) -> None:
-        """Evaluates the near and far-field particle potentials experienced
-        
-        Only done within leaf cells, and stop 'traversal' when all particles considered
-        
-        """
-        particle_counter = 0
-
-        for cell in reversed(self.cells):
-            if cell.bit_children != 0: # not leaf
-                continue
-            
-            for i, particle in enumerate(cell.particles):
-                # far-field
-                # evaluate local expansion
-                particle.potential += np.sum(cell.local * particle.centre**np.arange(cell.precision))
-
-
-                # near-field
-
-                # self field (can do pairwise fully)
-                for other in cell.particles[i+1:]:
-                    potential = - np.log(abs(particle.centre-other.centre))
-                    particle.potential += other.charge * potential
-                    other.potential += particle.charge * potential
-
-                # nearest neighbour field
-                for neighbour in cell.nearest_neighbours:
-                    if neighbour:
-                        for other in neighbour.particles:
-                            if other:
-                                particle.potential -= other.charge * np.log(abs(particle.centre - other.centre))
-
-                particle_counter += 1
-
-            # finish looping list if all particle potentials found
-            if particle_counter == self.n_particles:
-                break
-
+            cell._get_Mass_and_CoM()
     
-    def do_fmm(self, particles, n_crit) -> None:
-        self.populate_with_particles(particles,n_crit)
-        # self.print_tree()
-        self.populate_multipoles()
-        self.populate_level_matricies()
-        self.populate_nearest_neighbours()
-        self.populate_interaction_lists()
-        self.populate_locals()
-        self.get_particle_potentials()
+    def print_tree_CoMs(self):
+        def _print_CoM(cell:Cell, level:int):
+            print('\t'*level, cell.total_mass, cell.CoM, cell)
+            for child in cell.children:
+                if child:
+                    _print_CoM(child, level+1)
+        
+        _print_CoM(self, 0)
 
+    def calculate_particle_potentials(self):
+
+        def _interact_with_cell(particle:Particle, cell:Cell):
+            
+            # definitely cannot interact if particle in the cell
+            if particle in cell.particles:
+                if cell.bit_children:
+                    # look through the children
+                    for child in cell.children:
+                        if child:
+                            _interact_with_cell(particle, child)
+                return
+
+            # check theta to see if should go deeper
+            z0_abs = abs(particle.centre - cell.CoM)
+            if cell.size < self.theta * z0_abs: # far cell, CoM interact
+                particle.potential -= cell.total_mass * math.log(z0_abs)
+                return
+            
+            # near cell, go deeper if children
+            if cell.bit_children:
+                for child in cell.children:
+                    if child:
+                        _interact_with_cell(particle, child)
+            else:
+                for other in cell.particles:
+                    particle.potential -= particle.charge * math.log(abs(particle.centre - other.centre))
+
+        # consider each particle in the system
+        for particle in self.particles:
+            # start from the top of the tree and then work recursively down
+            # compare to theta at each point
+            _interact_with_cell(particle, self)
 
 def direct_particle_potentials(particles:List[Particle]):
     for particle in particles:
@@ -561,37 +380,33 @@ def plot(root:RootCell):
 
 
 def main():
-    num_particles = 4
-    p=4
-    max_level=10
-    n_crit=2
+    num_particles = 10
 
-    particles = [Particle() for _ in range(num_particles)]
-    root = RootCell(0.5*(1+1j),1,p,max_level)
+    particles = [Particle(1) for _ in range(num_particles)]
 
-    root.populate_with_particles(particles,n_crit)
-    # root.print_tree()
-    root.populate_multipoles()
-    root.populate_level_matricies()
-    root.populate_nearest_neighbours()
-    root.populate_interaction_lists()
-    root.populate_locals()
-    root.get_particle_potentials()
+    max_level = 10
+    n_crit = 2
 
+    root = RootCell(0.5+0.5j, 1, max_level, 0.5)
+
+    root.populate_with_particles(particles, n_crit)
+    plot(root)
+    root.populate_mass_CoM()
+
+    for particle in particles:
+        particle.potential = 0.0
+
+    root.calculate_particle_potentials()
 
     direct_particle_potentials(particles)
 
+    bh_pot = np.array([particle.potential for particle in particles])
+    dir_pot = np.array([particle.direct_potential for particle in particles])
+    diff_pot = bh_pot - dir_pot
+    frac_err = diff_pot / dir_pot
 
-    potentials = [particle.potential for particle in particles]
-    direct_potentials = [particle.direct_potential for particle in particles]
-    potential_err = list(np.array(potentials) - np.array(direct_potentials))
+    print(frac_err)
 
-    print([particle.centre for particle in particles])
-    print('Dir:', direct_potentials)
-    print('FMM:', potentials)
-    print('Err:', potential_err)
-
-    plot(particles)
 
 if __name__ == '__main__':
     main()
