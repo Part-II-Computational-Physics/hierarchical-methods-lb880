@@ -5,53 +5,82 @@ from typing import List
 from ...general import Particle
 from .cell import Cell
 
+__all__ = ['RootCell']
+
 class RootCell(Cell):
-    """Wrapper for total tree operations
+    """Class for the root cell of the tree. Methods used to act on the whole
+    tree.
+
+    Inherits from `Cell`
     
-    Attributes
+    Attributes (Additional)
     ----------
     max_level : int
         the max depth the tree is allowed to go to
+    theta : float
+        Value of theta to use in the Barnes-Hut algorithm.
+        Lower value has greater accuracy at compute time cost.
+        `theta = 0.5` 'typical'.
     cells : List[Cell]
-        list of all cells in the tree, in order they were created
-    level_matricies : List[Array]
-        matrix for each level containing reference (as to cells) of the index
-        of each of the cells on that level
+        List of all cells in the tree, in order they were created
+
+    Methods (Additional)
+    -------
+    populate_with_particles
+        Fill tree with given particles
+    populate_mass_CoM
+        Populate the tree with masses and CoMs
+    print_tree_CoMs
+        Print the tree with total mass and CoMs
+    calculate_particle_potentials
+        Calculate the value of the potential for all particles
     """
 
-    def __init__(self,
-                 centre:complex,
-                 size:float,
-                 max_level:int,
-                 theta:float) -> None:
+    def __init__(self, centre: complex, size: float, max_level: int,
+                 theta: float) -> None:
         
         super().__init__(centre, size)
 
         self.max_level:int = max_level
         self.theta: float = theta
-        self.cells:List[Cell] = [self]
-
+        self.cells: List[Cell] = [self]
     
-    def populate_with_particles(self, particles:List[Particle], n_crit:int=2):
-        self.particles = particles
-        self.n_particles = len(particles)
+    def populate_with_particles(self, particles: List[Particle], n_crit: int = 2
+                                ) -> None:
+        """Fill the tree with the given particles.
+        Creating the tree as required.
+
+        Parameters
+        ----------
+        particles : List[Particle]
+            List of the `Particle` objects to add into the tree
+        n_crit : int
+            Number of particles in a cell that should be then split at.
+            Default of `n_crit = 2`, corresponding to one particle per cell.
+        """
+
+        # add all the particles to own list
+        self.particles += particles
+        self.n_particles += len(particles)
         
+        # then split if required
         if self.n_particles >= n_crit:
             self._split_cell(n_crit, self.max_level, self.cells)
 
-        # for particle in particles:
-        #     self._add_particle(particle,
-        #                       n_crit,
-        #                       self.max_level,
-        #                       self.cells)
+    def populate_mass_CoM(self) -> None:
+        """Calculate the total mass and CoM for every cell in the tree.
+        Uses the `Cell._get_mass_and_CoM` method.
+        """
 
-    def populate_mass_CoM(self):
         # iterate from leaf nodes first
         for cell in reversed(self.cells):
-            cell._get_Mass_and_CoM()
+            cell._get_mass_CoM()
     
-    def print_tree_CoMs(self):
-        def _print_CoM(cell:Cell, level:int):
+    def print_tree_CoMs(self) -> None:
+        """Print all the total masses and CoM in the tree
+        """
+
+        def _print_CoM(cell: Cell, level: int):
             print('\t'*level, cell.total_mass, cell.CoM, cell)
             for child in cell.children:
                 if child:
@@ -59,10 +88,16 @@ class RootCell(Cell):
         
         _print_CoM(self, 0)
 
-    def calculate_particle_potentials(self):
+    def calculate_particle_potentials(self) -> None:
+        """Calculate the value of the potential felt by every particle in the
+        tree. Using the Barnes-Hut theta condition to decide if far or near
+        field interaction.
+        
+        Require total masses and CoM of all cells to have been calculated.
+        """
 
-        def _interact_with_cell(particle:Particle, cell:Cell):
-            
+        def _interact_with_cell(particle: Particle, cell: Cell) -> None:
+
             # don't interact with cells particle is in, unless they are leaf
             if particle in cell.particles:
                 if cell.bit_children:
@@ -74,7 +109,8 @@ class RootCell(Cell):
                 elif cell.n_particles > 1: # not just the particle
                     for other in cell.particles:
                         if other != particle:
-                            particle.potential -= other.charge * math.log(abs(particle.centre - other.centre))
+                            particle.potential -= other.charge \
+                                * math.log(abs(particle.centre - other.centre))
                 return
 
             # check theta to see if should go deeper
@@ -91,7 +127,8 @@ class RootCell(Cell):
                         _interact_with_cell(particle, child)
             else:
                 for other in cell.particles:
-                    particle.potential -= other.charge * math.log(abs(particle.centre - other.centre))
+                    particle.potential -= other.charge \
+                        * math.log(abs(particle.centre - other.centre))
 
         # consider each particle in the system
         for particle in self.particles:
