@@ -10,26 +10,25 @@ class Particle(Point):
     Attributes
     ----------
     centre : complex
-        coords of point,
-        random if no argument given
+        Coords of point, random if no argument given
     charge : float
-        charge associated with the point, real number,
+        Charge associated with the point, real number,
         if no argument given, random in range [-1,1)
-
-    Methods
-    -------
-    distance : float
-        return distance to another point
+    potential : float
+        To store evaluated potential
     """
 
-    def __init__(self, charge:float=None, centre:complex=None) -> None:
+    def __init__(self, charge:float=None, centre:complex=None, mass_like:bool=False) -> None:
         super().__init__(centre)
+
         if charge:
             self.charge:float = charge
         else:
-            # # random in range -1 to 1
-            # self.charge:float = 2*np.random.random() - 1
-            self.charge: float = 1 - np.random.random()
+            if mass_like: 
+                self.charge: float = 1 - np.random.random()
+            else:
+                # random in range -1 to 1
+                self.charge:float = 2*np.random.random() - 1
 
         self.potential:float = 0.0
 

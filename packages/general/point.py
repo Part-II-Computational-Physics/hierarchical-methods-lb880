@@ -6,13 +6,12 @@ class Point():
     Attributes
     ----------
     centre : complex
-        coords of point,
-        random if no argument given
+        Coords of point, random if no argument given
 
     Methods
     -------
     distance : float
-        return distance to another point
+        Return distance to another point
     """
 
     def __init__(self, centre:complex=None) -> None:
@@ -20,6 +19,9 @@ class Point():
             self.centre:complex = centre
         else:
             self.centre:complex = np.random.random() + 1j*np.random.random()
+    
+    def __repr__(self) -> str:
+        return f'Point: {self.centre}'
 
     def distance(self, other:'Point'):
         return abs(self.centre - other.centre)
