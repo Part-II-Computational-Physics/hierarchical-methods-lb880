@@ -32,8 +32,8 @@ def M2M(precision: int, level: int, array: NDArray, child_array: NDArray
             tools.cell.M2M(precision, (x,y), array, child_array)
 
 def M2L(precision: int, level: int, array: NDArray) -> None:
-    """Perform M2L to calculate locals of a given level due to the multipoles of
-    interactors on the level
+    """Perform M2L to calculate locals of a given level due to the multipoles
+    of interactors on the level
     
     Parameters
     ----------

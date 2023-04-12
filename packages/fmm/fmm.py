@@ -1,7 +1,7 @@
-import numpy as np
-
 from typing import List, Set
 from numpy.typing import NDArray
+
+import numpy as np
 
 from ..general import Particle
 
@@ -11,7 +11,8 @@ __all__ = ['create_expansion_arrays', 'insert_particles', 'upward_pass',
            'downward_pass', 'evaluate_particle_potentials', 'do_fmm']
 
 def create_expansion_arrays(precision: int, max_level: int) -> List[NDArray]:
-    """Returns a list of arrays for the expansion coefficients to be placed into
+    """Returns a list of arrays for the expansion coefficients to be placed
+    into.
     
     For each cell the first value also stores the complex centre of that cell
 
@@ -97,7 +98,8 @@ def upward_pass(precision: int, expansion_arrays: List[NDArray]) -> None:
         Precision for the multipole expansions
     expansion_arrays : List[3DArray]
         List of the expansion arrays for all of the levels.
-        Expected that the finest grained level has already had multipoles filled
+        Expected that the finest grained level has already had multipoles
+        filled
     """
 
     # Starts at second to max level, and then goes upwards up to the 0th level
@@ -130,7 +132,8 @@ def downward_pass(precision: int, expansion_arrays: List[NDArray]) -> None:
         # interaction list contributions
         tools.level.M2L(precision, level, expansion_arrays[level])
         # distribute to children
-        tools.level.L2L(precision, level, expansion_arrays[level], expansion_arrays[level+1])
+        tools.level.L2L(precision, level, expansion_arrays[level],
+                        expansion_arrays[level+1])
 
     # no L2L for finest level, no children
     tools.level.M2L(precision, max_level, expansion_arrays[max_level])
@@ -169,9 +172,10 @@ def evaluate_particle_potentials(precision: int, max_level: int,
 
             # near particles are those in the cell and its neighbours
             near_particles = set()
-            for neighbour_set in [finest_particles[xn][yn] 
-                                  for xn,yn in tools.coord.neighbours((x,y), max_level)
-                                 ]:
+            for neighbour_set in \
+                [finest_particles[xn][yn] for xn,yn \
+                 in tools.coord.neighbours((x,y), max_level)
+            ]:
                 near_particles.update(neighbour_set)
             near_particles.update(cell_particles)
 

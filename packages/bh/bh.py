@@ -1,10 +1,10 @@
+from typing import List
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-from typing import List
-
-from ..general import Particle
 from . import cells
+from ..general import Particle
 
 __all__ = ['do_bh', 'plot']
 

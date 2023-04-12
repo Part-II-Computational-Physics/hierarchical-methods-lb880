@@ -18,7 +18,8 @@ class Particle(Point):
         To store evaluated potential
     """
 
-    def __init__(self, charge:float=None, centre:complex=None, mass_like:bool=False) -> None:
+    def __init__(self, charge: float = None, centre: complex = None,          
+                 mass_like: bool = False) -> None:
         super().__init__(centre)
 
         if charge:

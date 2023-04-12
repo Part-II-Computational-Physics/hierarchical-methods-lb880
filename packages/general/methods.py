@@ -1,13 +1,15 @@
+from typing import List
+
 import math
 
-from typing import List
 from . import Particle
 
 __all__ = ['direct_particle_potentials']
 
 def direct_particle_potentials(particles: List[Particle],
                                zero_potentials: bool = False) -> None:
-    """Calculate through pairwise interactions the particle potentials and store
+    """Calculate through pairwise interactions the particle potentials and
+    store
     
     Parameters
     ----------

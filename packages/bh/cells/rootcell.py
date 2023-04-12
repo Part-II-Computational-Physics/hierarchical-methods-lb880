@@ -1,9 +1,9 @@
-import math
-
 from typing import List
 
-from ...general import Particle
+import math
+
 from .cell import Cell
+from ...general import Particle
 
 __all__ = ['RootCell']
 
@@ -45,8 +45,8 @@ class RootCell(Cell):
         self.theta: float = theta
         self.cells: List[Cell] = [self]
     
-    def populate_with_particles(self, particles: List[Particle], n_crit: int = 2
-                                ) -> None:
+    def populate_with_particles(self, particles: List[Particle],
+                                n_crit: int = 2) -> None:
         """Fill the tree with the given particles.
         Creating the tree as required.
 
@@ -105,7 +105,7 @@ class RootCell(Cell):
                     for child in cell.children:
                         if child:
                             _interact_with_cell(particle, child)
-                # if leaf cell, then need to pairwise interact with all but self
+                # if leaf cell, need to pairwise interact with all but self
                 elif cell.n_particles > 1: # not just the particle
                     for other in cell.particles:
                         if other != particle:

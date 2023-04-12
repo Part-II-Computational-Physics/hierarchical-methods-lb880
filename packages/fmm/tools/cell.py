@@ -1,13 +1,13 @@
 """Cell operation tools"""
 
-import numpy as np
-from scipy.special import binom
-
 from typing import Tuple
 from numpy.typing import NDArray
 
-from ...general import Particle
+import numpy as np
+from scipy.special import binom
+
 from .. import tools
+from ...general import Particle
 
 __all__ = ['calculate_multipole', 'M2M', 'M2L', 'L2L']
 

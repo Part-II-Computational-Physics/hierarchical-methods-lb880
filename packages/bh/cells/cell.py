@@ -1,6 +1,6 @@
-import numpy as np
-
 from typing import List, Tuple
+
+import numpy as np
 
 from ...general import Point, Particle
 
@@ -205,13 +205,16 @@ class Cell(Point):
         If a branch this is calulated due to the contribution of children.
         """
         if not self.bit_children: # leaf
-            masses = np.array([particle.charge for particle in self.particles])
-            centres = np.array([particle.centre for particle in self.particles])
+            masses = np.array(
+                [particle.charge for particle in self.particles])
+            centres = np.array(
+                [particle.centre for particle in self.particles])
         
         else: # has children to 'take' CoM from
             masses = np.array(
                 [child.total_mass for child in self.children if child])
-            centres = np.array([child.CoM for child in self.children if child])
+            centres = np.array(
+                [child.CoM for child in self.children if child])
 
         # calculate total mass and centre of mass
         self.total_mass = np.sum(masses)
