@@ -6,8 +6,8 @@ from .. import tools
 
 __all__ = ['M2M', 'M2L', 'L2L']
 
-def M2M(precision: int, level: int,
-              array: NDArray, child_array: NDArray) -> None:
+def M2M(precision: int, level: int, array: NDArray, child_array: NDArray
+        ) -> None:
     """Perform M2M to calculate multipoles of a given level
     due to the multipoles in the child level
     
@@ -51,8 +51,8 @@ def M2L(precision: int, level: int, array: NDArray) -> None:
             for interactor in tools.coord.interaction_list((x,y), level):
                 tools.cell.M2L(precision,(x,y),interactor,array)
 
-def L2L(precision: int, level: int,
-              matrix: NDArray, child_matrix:NDArray) -> None:
+def L2L(precision: int, level: int, array: NDArray, child_array:NDArray
+        ) -> None:
     """Perform L2L to distribute local expansions of a given level to children
     level
     
@@ -71,4 +71,4 @@ def L2L(precision: int, level: int,
 
     for x in range(2**level):
         for y in range(2**level):
-            tools.cell.L2L(precision, (x,y), matrix, child_matrix)
+            tools.cell.L2L(precision, (x,y), array, child_array)

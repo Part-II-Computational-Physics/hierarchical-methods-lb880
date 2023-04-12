@@ -37,8 +37,8 @@ def calculate_multipole(precision: int, particle: Particle, cell: Tuple[int],
     array[cell][2:precision+1] -= particle.charge * z0**k_vals / k_vals
 
 
-def M2M(precision: int, cell: Tuple[int],
-             array: NDArray, child_array: NDArray) -> None:
+def M2M(precision: int, cell: Tuple[int], array: NDArray, child_array: NDArray
+        ) -> None:
     """Perform M2M from children for a given cell to calculate its multipole
     
     Parameters
@@ -68,7 +68,7 @@ def M2M(precision: int, cell: Tuple[int],
                                          * binom(l-1, k_vals-1))
             
 def M2L(precision: int, cell: Tuple[int], interactor: Tuple[int],
-             array: NDArray) -> None:
+        array: NDArray) -> None:
     """Use M2L method to get the local expansion for a cell due to an 
     interactor's multipole
     
@@ -107,8 +107,8 @@ def M2L(precision: int, cell: Tuple[int], interactor: Tuple[int],
                      * binom(l_vals[:,np.newaxis] + k_vals - 1, k_vals-1),
                      axis=1)
     
-def L2L(precision: int, cell: Tuple[int],
-             array: NDArray, child_array: NDArray) -> None:
+def L2L(precision: int, cell: Tuple[int], array: NDArray, child_array: NDArray
+        ) -> None:
     """Use L2L method to distribute local expansion to a given cell's children
     
     Parameters

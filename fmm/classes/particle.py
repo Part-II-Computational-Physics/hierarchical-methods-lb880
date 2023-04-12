@@ -25,8 +25,9 @@ class Particle():
         if charge:
             self.charge: float = charge
         else:
-            # random in range -1 to 1
-            self.charge: float = 2*np.random.random() - 1
+            # # random in range -1 to 1
+            # self.charge: float = 2*np.random.random() - 1
+            self.charge: float = np.random.random()
 
         self.potential: float = 0.0
 

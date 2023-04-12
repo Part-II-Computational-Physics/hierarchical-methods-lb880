@@ -100,8 +100,7 @@ def neighbours(cell_coords: Tuple[int], level: int) -> Set[Tuple[int]]:
     
     return neighbours
 
-def interaction_list(cell_coords: Tuple[int], level: int
-                         ) -> Set[Tuple[int]]:
+def interaction_list(cell_coords: Tuple[int], level: int) -> Set[Tuple[int]]:
     """Returns nearest neighbour coordinates given cell coordinates
     
     (Coordinates are matrix indicies)
