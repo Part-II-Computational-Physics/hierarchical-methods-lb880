@@ -58,8 +58,9 @@ class Particle(Point):
         if charge:
             self.charge:float = charge
         else:
-            # random in range -1 to 1
-            self.charge:float = 2*np.random.random() - 1
+            # # random in range -1 to 1
+            # self.charge:float = 2*np.random.random() - 1
+            self.charge: float = 1 - np.random.random()
 
         self.potential:float = 0.0
 
@@ -331,7 +332,7 @@ class RootCell(Cell):
                         _interact_with_cell(particle, child)
             else:
                 for other in cell.particles:
-                    particle.potential -= particle.charge * math.log(abs(particle.centre - other.centre))
+                    particle.potential -= other.charge * math.log(abs(particle.centre - other.centre))
 
         # consider each particle in the system
         for particle in self.particles:
@@ -349,6 +350,19 @@ def direct_particle_potentials(particles:List[Particle]):
             particle.direct_potential += other.charge * potential
             other.direct_potential += particle.charge * potential
 
+
+def do_bh(particles:List[Particle], max_level, theta, n_crit=2, zero_potentials=False):
+
+    if zero_potentials:
+        for particle in particles:
+            particle.potential = 0.0
+
+    root = RootCell(0.5+0.5j, 1, max_level, theta)
+
+    root.populate_with_particles(particles, n_crit)
+    root.populate_mass_CoM()
+    root.calculate_particle_potentials()
+    
 
 def plot(root:RootCell):
     fig,ax = plt.subplots()
@@ -380,32 +394,27 @@ def plot(root:RootCell):
 
 
 def main():
-    num_particles = 10
+    num_particles = 1000
 
-    particles = [Particle(1) for _ in range(num_particles)]
+    particles = [Particle() for _ in range(num_particles)]
+    # print([particle.charge for particle in particles])
 
     max_level = 10
+    theta = 0
     n_crit = 2
 
-    root = RootCell(0.5+0.5j, 1, max_level, 0.5)
-
-    root.populate_with_particles(particles, n_crit)
-    plot(root)
-    root.populate_mass_CoM()
-
-    for particle in particles:
-        particle.potential = 0.0
-
-    root.calculate_particle_potentials()
+    do_bh(particles, max_level, theta, n_crit)
 
     direct_particle_potentials(particles)
 
     bh_pot = np.array([particle.potential for particle in particles])
     dir_pot = np.array([particle.direct_potential for particle in particles])
     diff_pot = bh_pot - dir_pot
-    frac_err = diff_pot / dir_pot
+    frac_err = np.abs(diff_pot / dir_pot)
 
     print(frac_err)
+    print(np.max(frac_err))
+    print(np.average(frac_err))
 
 
 if __name__ == '__main__':
