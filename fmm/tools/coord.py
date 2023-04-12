@@ -2,7 +2,7 @@
 
 from typing import List, Tuple, Set
 
-from ..classes import Particle
+from ...general import Particle
 
 __all__ = ['children', 'parent', 'neighbours', 'interaction_list',
            'particle_cell']

@@ -3,13 +3,12 @@ import numpy as np
 from typing import List, Set
 from numpy.typing import NDArray
 
-from .classes import Particle
+from ..general import Particle
 
 from . import tools
 
 __all__ = ['create_expansion_arrays', 'insert_particles', 'upward_pass',
-           'downward_pass', 'evaluate_particle_potentials', 'do_fmm',
-           'direct_particle_potentials']
+           'downward_pass', 'evaluate_particle_potentials', 'do_fmm']
 
 def create_expansion_arrays(precision: int, max_level: int) -> List[NDArray]:
     """Returns a list of arrays for the expansion coefficients to be placed into
@@ -224,24 +223,3 @@ def do_fmm(precision: int, particles: List[Particle],
     evaluate_particle_potentials(precision, max_level, finest_particles,
                                  expansion_arrays[max_level])
 
-def direct_particle_potentials(particles: List[Particle],
-                               zero_potentials: bool = False) -> None:
-    """Calculate through pairwise interactions the particle potentials and store
-    
-    Parameters
-    ----------
-    particles : List[Particle]
-        List of the `Particle` objects to calculate the direct potentials for
-    zero_potentials : bool
-        Controls if particle potentials are explicitly reset to zero in the
-        process. Default of False (does not change the potentials)
-    """
-    if zero_potentials:
-        for particle in particles:
-            particle.direct_potential = 0.0
-
-    for i, particle in enumerate(particles):
-        for other in particles[i+1:]:
-            potential = - np.log(abs(particle.centre-other.centre))
-            particle.direct_potential += other.charge * potential
-            other.direct_potential += particle.charge * potential

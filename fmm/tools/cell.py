@@ -6,7 +6,7 @@ from scipy.special import binom
 from typing import Tuple
 from numpy.typing import NDArray
 
-from ..classes import Particle
+from ...general import Particle
 from .. import tools
 
 __all__ = ['calculate_multipole', 'M2M', 'M2L', 'L2L']
