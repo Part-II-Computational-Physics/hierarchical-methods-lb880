@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import List, Set, Tuple
 from numpy.typing import NDArray
 
 import numpy as np
@@ -8,7 +8,7 @@ from ..general import Particle
 from . import tools
 
 __all__ = ['create_expansion_arrays', 'insert_particles', 'upward_pass',
-           'downward_pass', 'evaluate_particle_potentials', 'do_fmm']
+           'downward_pass', 'evaluate_particles', 'do_fmm']
 
 def create_expansion_arrays(precision: int, max_level: int) -> List[NDArray]:
     """Returns a list of arrays for the expansion coefficients to be placed
@@ -138,10 +138,37 @@ def downward_pass(precision: int, expansion_arrays: List[NDArray]) -> None:
     # no L2L for finest level, no children
     tools.level.M2L(precision, max_level, expansion_arrays[max_level])
 
+def _neighbour_particles(cell: Tuple, level: int, array_particles: NDArray
+                         ) -> Set[Particle]:
+    """Returns a set of all particles in the nearest neighbours of the given
+    cell.
+    
+    Parameters
+    ----------
+    cell : Tuple
+        The array indicies of the relevant cell
+    level : int
+        The level of the array being considered
+    array_particles: 2DArray
+        Array of sets of Particles that are in each cell
 
-def evaluate_particle_potentials(precision: int, max_level: int,
-                                 finest_particles: List[List[Set[Particle]]],
-                                 finest_array: NDArray) -> None:
+    Returns
+    -------
+    neighbour_particles : Set[Particle]
+        Set of Particles that are in the cell's neighbours
+    """
+    
+    # near particles are those in the cell and its neighbours
+    neighbour_particles: Set[Particle] = set()
+    for neighbour_set in [array_particles[xn][yn] \
+                          for xn,yn in tools.coord.neighbours(cell, level)]:
+        neighbour_particles.update(neighbour_set)
+    
+    return neighbour_particles
+
+def evaluate_particles(precision: int, max_level: int, 
+                       finest_particles: List[List[Set[Particle]]],
+                       finest_array: NDArray) -> None:
     """Evaluate the potentials for each particle in the '2D Array' of sets of
     `Particle`, `finest_particles`. Potential is a sum of the far-field (from
     calculated local expansions) and near-field (from pairwise interaction of 
@@ -163,40 +190,42 @@ def evaluate_particle_potentials(precision: int, max_level: int,
         Expansion array for the relevant `max_level`
     """
     
+    l_vals = np.arange(precision)
+
     for x, ys in enumerate(finest_particles):
         for y, cell_particles in enumerate(ys):
             
             # if no particles in that cell, pass the cell
             if not cell_particles:
                 continue
-
-            # near particles are those in the cell and its neighbours
-            near_particles = set()
-            for neighbour_set in \
-                [finest_particles[xn][yn] for xn,yn \
-                 in tools.coord.neighbours((x,y), max_level)
-            ]:
-                near_particles.update(neighbour_set)
-            near_particles.update(cell_particles)
-
-            cell_centre = finest_array[x,y,0]
-            l_vals = np.arange(precision)
+            
+            # get particles that can interact with particles in the cell
+            near_particles: Set[Particle] = cell_particles.union(
+                _neighbour_particles((x,y), max_level, finest_particles)
+            )
+            local = finest_array[x,y,precision+1:]
 
             for particle in cell_particles:
-                # far field expansion contribution
-                z0 = particle.centre - cell_centre
-                particle.potential -= np.sum(
-                        finest_array[x,y,precision+1:] * z0**l_vals
-                    ).real
+                # far field local expansion contribution
+                z0 = particle.centre - finest_array[x,y,0]
+                particle.potential -= np.sum(local * z0**l_vals).real
+
+                w_prime = np.sum(l_vals[1:] * local[1:] * z0**l_vals[:-1])
+                particle.force += particle.charge * np.array((w_prime.real, -w_prime.imag))
 
                 # near-field
                 # near particles excluding the own particle
-                for other_particle in near_particles-{particle}:
-                    particle.potential -= other_particle.charge \
-                        * np.log(abs(particle.centre - other_particle.centre))
+                for other in near_particles-{particle}:
+                    z0 = particle.centre - other.centre
+                    particle.potential -= other.charge * np.log(abs(z0))
+                    
+                    particle.force += particle.charge * other.charge \
+                        * np.array((z0.real, z0.imag)) / abs(z0)**2
+
 
 def do_fmm(precision: int, particles: List[Particle],
-           expansion_arrays: List[NDArray], zero_potentials: bool = False
+           expansion_arrays: List[NDArray],
+           zero_potentials: bool = False, zero_forces: bool = False
            ) -> None:
     """Updates particle potentials in the given particle list using the full
     FMM method, with the given parameters
@@ -219,11 +248,14 @@ def do_fmm(precision: int, particles: List[Particle],
     if zero_potentials:
         for particle in particles:
             particle.potential = 0.0
+    if zero_forces:
+        for particle in particles:
+            particle.force = np.zeros(2, dtype=float)
 
     finest_particles = insert_particles(precision, max_level, particles,
                                         expansion_arrays[max_level])
     upward_pass(precision, expansion_arrays)
     downward_pass(precision, expansion_arrays)
-    evaluate_particle_potentials(precision, max_level, finest_particles,
+    evaluate_particles(precision, max_level, finest_particles,
                                  expansion_arrays[max_level])
 

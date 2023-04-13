@@ -1,6 +1,10 @@
+from numpy.typing import NDArray
+
 import numpy as np
 
 from .point import Point
+
+__all__ = ['Particle']
 
 class Particle(Point):
     """Sources to calculate multipoles from
@@ -31,7 +35,8 @@ class Particle(Point):
                 # random in range -1 to 1
                 self.charge:float = 2*np.random.random() - 1
 
-        self.potential:float = 0.0
+        self.potential: float = 0.0
+        self.force: NDArray = np.zeros(2)
 
     def __repr__(self) -> str:
         return f'Particle: {self.centre}, charge {self.charge}'

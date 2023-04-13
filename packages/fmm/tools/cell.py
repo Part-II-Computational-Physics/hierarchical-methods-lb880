@@ -87,10 +87,9 @@ def M2L(precision: int, cell: Tuple[int], interactor: Tuple[int],
     # local expansion 'about origin' (so about cell)
     z0 = array[interactor][0] - array[cell][0]
 
-    minus_and_plus = np.empty(precision-1)
+    # arrays for calculations
+    minus_and_plus = np.ones(precision-1)
     minus_and_plus[::2] = -1
-    minus_and_plus[1::2] = 1
-
     k_vals = np.arange(1, precision)
     l_vals = np.arange(1, precision)
 
