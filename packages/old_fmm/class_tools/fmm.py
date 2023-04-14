@@ -2,7 +2,7 @@ from typing import List
 
 import numpy as np
 
-from ..general import Particle
+from ...general import Particle
 
 from .level import Level, FinestLevel
 

@@ -94,9 +94,9 @@ def M2L(precision: int, cell: Tuple[int], interactor: Tuple[int],
     l_vals = np.arange(1, precision)
 
     interactor_multipole = array[interactor][1:precision+1]
-
+    
     minus_bk_over_z0k = minus_and_plus * interactor_multipole[1:] / z0**k_vals
-
+    
     array[cell][precision+1] += interactor_multipole[0] * np.log(-z0) \
                               + np.sum(minus_bk_over_z0k)
 
