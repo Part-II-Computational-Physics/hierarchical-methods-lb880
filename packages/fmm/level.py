@@ -20,7 +20,7 @@ class Level():
         axis_amount = 2**level_num
         self.axis_amount: int = axis_amount
 
-        # fill in particle coords
+        # expansion array
         self.array = np.zeros((axis_amount, axis_amount, 2*precision+1),
                                         dtype=complex)
         first_val = 1 / (2**(level_num+1))
