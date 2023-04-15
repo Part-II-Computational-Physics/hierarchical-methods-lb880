@@ -20,6 +20,7 @@ class BH():
             self.max_level: int = max_level
         else:
             self.max_level: int = int(math.log2(len(particles)))
+        self.create_root()
 
     def create_root(self) -> None:
         self.root = cells.RootCell(0.5+0.5j, 1, self.particles, self.theta, self.n_crit, self.max_level)
@@ -34,7 +35,7 @@ class BH():
         self.root.populate_mass_CoM()
         self.root.evaluate_particle_potentials()
 
-    def plot(self):
+    def plot(self, fmm_grid: bool = False):
         fig,ax = plt.subplots()
         ax.set_aspect('equal')
         ax.set_xlim(0,1)
@@ -59,6 +60,14 @@ class BH():
                         draw_rectangles(child)
 
         draw_rectangles(self.root)
+
+        if fmm_grid:
+            first_val = 1 / (2**(int(self.max_level/2)))
+            # stop of 1 as this is the so called max value, but will never appear
+            ticks = np.arange(first_val, 1, first_val)
+            ax.set_xticks(ticks, minor=True)
+            ax.set_yticks(ticks, minor=True)
+            ax.grid(True, 'minor')
 
         plt.show()
     
