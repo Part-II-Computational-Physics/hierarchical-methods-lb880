@@ -28,6 +28,13 @@ class Level():
         vals = np.arange(first_val, 1, 2*first_val)
         X, Y = np.meshgrid(vals, vals, indexing='ij')
         self.array[:,:,0] = X + 1j*Y
+
+        # pre-made arrays for M2M, etc
+        # M2L
+        self.minus_and_plus = np.ones(self.precision-1)
+        self.minus_and_plus[::2] = -1
+        self.k_M2L = np.arange(1, self.precision)
+        self.l_M2L = np.arange(1, self.precision)
     
     def zero_expansions(self) -> None:
         self.array[:,:,1:] = 0
@@ -70,22 +77,16 @@ class Level():
         # local expansion 'about origin' (so about cell)
         z0 = self.array[interactor.index][0] - self.array[cell.index][0]
 
-        # arrays for calculations
-        minus_and_plus = np.ones(self.precision-1)
-        minus_and_plus[::2] = -1
-        k_vals = np.arange(1, self.precision)
-        l_vals = np.arange(1, self.precision)
-
         interactor_multipole = self.array[interactor.index][1:self.precision+1]
         
-        minus_bk_over_z0k = minus_and_plus * interactor_multipole[1:] / z0**k_vals
+        minus_bk_over_z0k = self.minus_and_plus * interactor_multipole[1:] / z0**self.k_M2L
         
         self.array[cell.index][self.precision+1] += interactor_multipole[0] * np.log(-z0) \
                                             + np.sum(minus_bk_over_z0k)
 
         self.array[cell.index][self.precision+2:] += \
-                -interactor_multipole[0] / (l_vals * z0**l_vals) + (1/z0**l_vals) \
-                * np.sum(minus_bk_over_z0k * binom(l_vals[:,np.newaxis] + k_vals - 1, k_vals-1),
+                -interactor_multipole[0] / (self.l_M2L * z0**self.l_M2L) + (1/z0**self.l_M2L) \
+                * np.sum(minus_bk_over_z0k * binom(self.l_M2L[:,np.newaxis] + self.k_M2L - 1, self.k_M2L-1),
                         axis=1)
         
     def M2L(self) -> None:
@@ -128,6 +129,7 @@ class Level():
 
     def __repr__(self) -> str:
         return(f'Level: {self.level_num}')
+
 
 class FinestLevel(Level):
     def __init__(self, level_num: int, precision: int) -> None:
@@ -220,3 +222,4 @@ class FinestLevel(Level):
 
     def __repr__(self) -> str:
         return 'Finest' + super().__repr__()
+    
