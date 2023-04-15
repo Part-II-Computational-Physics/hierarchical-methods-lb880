@@ -5,9 +5,9 @@ import numpy as np
 
 from . import Particle
 
-__all__ = ['direct_particle_potentials', 'direct_particle_forces']
+__all__ = ['potentials', 'forces']
 
-def direct_particle_potentials(particles: List[Particle],
+def potentials(particles: List[Particle],
                                zero_potentials: bool = False) -> None:
     """Calculate through pairwise interactions the particle potentials and
     store
@@ -30,7 +30,7 @@ def direct_particle_potentials(particles: List[Particle],
             particle.direct_potential += other.charge * potential
             other.direct_potential += particle.charge * potential
 
-def direct_particle_forces(particles: List[Particle],
+def forces(particles: List[Particle],
                            zero_forces: bool = False) -> None:
     """Calculate through pairwise interactions the particle potentials and
     store
