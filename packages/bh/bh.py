@@ -41,7 +41,7 @@ class BH():
         ax.set_xlim(0,1)
         ax.set_ylim(0,1)
 
-        points = [source.centre for source in self.particles]
+        points = [particle.centre for particle in self.particles]
         X,Y = np.real(points), np.imag(points)
 
         ax.scatter(X,Y)
