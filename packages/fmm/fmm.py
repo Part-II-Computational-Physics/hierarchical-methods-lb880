@@ -19,8 +19,8 @@ class FMM():
             self.max_level: int = max_level
         else:
             self.max_level: int = int(0.5 * math.log2(len(particles)))
-        self.levels: List[Level] = [Level(lvl, precision) for lvl in range(max_level)]
-        self.finest_level: FinestLevel = FinestLevel(max_level, precision)
+        self.levels: List[Level] = [Level(lvl, precision) for lvl in range(self.max_level)]
+        self.finest_level: FinestLevel = FinestLevel(self.max_level, precision)
         self.levels.append(self.finest_level)
 
     def upward_pass(self) -> None:

@@ -22,7 +22,7 @@ class BH():
             self.max_level: int = int(math.log2(len(particles)))
 
     def create_root(self) -> None:
-        self.root = cells.RootCell(0.5+0.5j, 1, self.particles, self.max_level, self.theta, self.n_crit)
+        self.root = cells.RootCell(0.5+0.5j, 1, self.particles, self.theta, self.n_crit, self.max_level)
 
     def do_bh(self, zero_potentials: bool = False):
         if zero_potentials:

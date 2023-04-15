@@ -168,7 +168,7 @@ class Cell(Point):
             return
         
         elif self.n_particles == self.n_crit: # just become not leaf
-            self._split_cell(self.n_crit, max_level, cells)
+            self._split_cell(max_level, cells)
 
         else: # already branch
             quadrant = self._quadrant(particle.centre)
@@ -180,8 +180,7 @@ class Cell(Point):
                 self._add_child(quadrant, cells)
 
             # add particle to child
-            self.children[quadrant]._add_particle(particle, self.n_crit, max_level,
-                                                  cells)
+            self.children[quadrant]._add_particle(particle, max_level, cells)
 
     def _get_mass_CoM(self) -> None:
         """Calculate the total mass and centre of mass of the cell.
