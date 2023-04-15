@@ -6,76 +6,53 @@ import matplotlib.pyplot as plt
 from . import cells
 from ..general import Particle
 
-__all__ = ['do_bh', 'plot']
+__all__ = ['BH']
 
+class BH():
+    def __init__(self, particles: List[Particle], max_level: int, theta: float, n_crit:int = 2) -> None:
+        self.particles: List[Particle] = particles
+        self.max_level: int = max_level
+        self.theta: float = theta
+        self.n_crit: int = n_crit
 
-def do_bh(particles:List[Particle], max_level, theta, n_crit=2, zero_potentials=False):
+    def create_root(self) -> None:
+        self.root = cells.RootCell(0.5+0.5j, 1, self.particles, self.max_level, self.theta, self.n_crit)
 
-    if zero_potentials:
-        for particle in particles:
-            particle.potential = 0.0
+    def do_bh(self, zero_potentials: bool = False):
+        if zero_potentials:
+            for particle in self.particles:
+                particle.potential = 0.0
+        
+        self.create_root()
+        self.root.create_tree()
+        self.root.populate_mass_CoM()
+        self.root.evaluate_particle_potentials()
 
-    root = cells.RootCell(0.5+0.5j, 1, max_level, theta)
+    def plot(self):
+        fig,ax = plt.subplots()
+        ax.set_aspect('equal')
+        ax.set_xlim(0,1)
+        ax.set_ylim(0,1)
 
-    root.populate_with_particles(particles, n_crit)
-    root.populate_mass_CoM()
-    root.calculate_particle_potentials()
+        points = [source.centre for source in self.particles]
+        X,Y = np.real(points), np.imag(points)
+
+        ax.scatter(X,Y)
+
+        import matplotlib.patches as patches
+
+        def draw_rectangles(cell: cells.Cell):
+            corner = cell.centre - cell.size*(0.5+0.5j)
+            p = patches.Rectangle((corner.real,corner.imag),cell.size,cell.size, fill=False, color='red')
+            ax.add_patch(p)
+            if cell.bit_children == 0:
+                return
+            else:
+                for child in cell.children:
+                    if child:
+                        draw_rectangles(child)
+
+        draw_rectangles(self.root)
+
+        plt.show()
     
-
-def plot(root:cells.RootCell):
-    fig,ax = plt.subplots()
-    ax.set_aspect('equal')
-    ax.set_xlim(0,1)
-    ax.set_ylim(0,1)
-
-    points = [source.centre for source in root.particles]
-    X,Y = np.real(points), np.imag(points)
-
-    ax.scatter(X,Y)
-
-    import matplotlib.patches as patches
-
-    def draw_rectangles(cell:cells.Cell):
-        corner = cell.centre - cell.size*(0.5+0.5j)
-        p = patches.Rectangle((corner.real,corner.imag),cell.size,cell.size, fill=False, color='red')
-        ax.add_patch(p)
-        if cell.bit_children == 0:
-            return
-        else:
-            for child in cell.children:
-                if child:
-                    draw_rectangles(child)
-
-    draw_rectangles(root)
-
-    plt.show()
-
-
-def main():
-    from ..general import direct_particle_potentials
-
-    num_particles = 1000
-
-    particles = [Particle() for _ in range(num_particles)]
-    # print([particle.charge for particle in particles])
-
-    max_level = 10
-    theta = 0
-    n_crit = 2
-
-    do_bh(particles, max_level, theta, n_crit)
-
-    direct_particle_potentials(particles)
-
-    bh_pot = np.array([particle.potential for particle in particles])
-    dir_pot = np.array([particle.direct_potential for particle in particles])
-    diff_pot = bh_pot - dir_pot
-    frac_err = np.abs(diff_pot / dir_pot)
-
-    print(frac_err)
-    print(np.max(frac_err))
-    print(np.average(frac_err))
-
-
-if __name__ == '__main__':
-    main()

@@ -41,8 +41,7 @@ class Cell(Point):
         Print the tree from this cell as the root
     """
 
-    def __init__(self, centre: complex, size: float, parent: 'Cell' = None
-                 ) -> None:
+    def __init__(self, centre: complex, size: float, parent: 'Cell', n_crit: int = 2) -> None:
         
         super().__init__(centre)
 
@@ -55,27 +54,13 @@ class Cell(Point):
 
         self.parent: 'Cell' = parent
 
-        self.level_coords: Tuple[int] = (
-            int(self.centre.real * 2**(self.level) -0.5),
-            int(self.centre.imag * 2**(self.level) -0.5)
-        )
+        self.n_crit: int = n_crit
 
         self.n_particles: int = 0
         self.particles: List[Particle] = []
 
         self.bit_children: int = 0 # 0000, for bitwise operations
         self.children: List['Cell'] = [None]*4
-
-    def __repr__(self) -> str:
-        return f'Cell lvl{self.level}: {self.centre} \
-            {self.n_particles} particle'
-    
-    def print_tree(self, level=0):
-        print('\t'*level, self.level_coords, self)
-        for child in self.children:
-            if child:
-                child.print_tree(level+1)
-
 
     def _add_child(self, quadrant: int, cells: List['Cell']) -> None:
         """Add new child to the cell in given quadrant.
@@ -99,7 +84,8 @@ class Cell(Point):
         # add child to array of children, in correct location
         self.children[quadrant] = Cell(centre = child_centre,
                                        size = self.size/2,
-                                       parent = self)
+                                       parent = self,
+                                       n_crit =  self.n_crit)
         # store in bitchildren
         self.bit_children += (1<<quadrant)
 
@@ -127,7 +113,7 @@ class Cell(Point):
         return (centre.real > self.centre.real) \
                 | (centre.imag > self.centre.imag)<<1
     
-    def _split_cell(self, n_crit: int, max_level: int, cells: List['Cell']
+    def _split_cell(self, max_level: int, cells: List['Cell']
                     ) -> None:
         """Splits self cell, distributing children and creating child cells as
         needed.
@@ -155,11 +141,10 @@ class Cell(Point):
                 self._add_child(quadrant, cells)
 
             # add particle to child
-            self.children[quadrant]._add_particle(particle, n_crit, max_level,
+            self.children[quadrant]._add_particle(particle, max_level,
                                                   cells)
         
-    def _add_particle(self, particle: Particle, n_crit: int, max_level: int,
-                      cells: List['Cell']) -> None:
+    def _add_particle(self, particle: Particle, max_level: int, cells: List['Cell']) -> None:
         """Add a particle to the given cell, splitting the cell if required
         
         Parameters
@@ -179,11 +164,11 @@ class Cell(Point):
         self.particles.append(particle)
 
         # still a leaf or at the max level, no splitting or children
-        if (self.n_particles < n_crit) or (self.level == max_level):
+        if (self.n_particles < self.n_crit) or (self.level == max_level):
             return
         
-        elif self.n_particles == n_crit: # just become not leaf
-            self._split_cell(n_crit, max_level, cells)
+        elif self.n_particles == self.n_crit: # just become not leaf
+            self._split_cell(self.n_crit, max_level, cells)
 
         else: # already branch
             quadrant = self._quadrant(particle.centre)
@@ -195,10 +180,9 @@ class Cell(Point):
                 self._add_child(quadrant, cells)
 
             # add particle to child
-            self.children[quadrant]._add_particle(particle, n_crit, max_level,
+            self.children[quadrant]._add_particle(particle, self.n_crit, max_level,
                                                   cells)
 
-    
     def _get_mass_CoM(self) -> None:
         """Calculate the total mass and centre of mass of the cell.
         If a leaf this is calculated due to the contribution of all the cells.
@@ -219,3 +203,17 @@ class Cell(Point):
         # calculate total mass and centre of mass
         self.total_mass = np.sum(masses)
         self.CoM = np.sum(masses * centres) / self.total_mass
+
+    def print_tree(self, level: int = 0) -> None:
+        level_coords = (
+            int(self.centre.real * 2**(self.level) -0.5),
+            int(self.centre.imag * 2**(self.level) -0.5)
+        )
+        print('\t'*level, level_coords, self)
+        for child in self.children:
+            if child:
+                child.print_tree(level+1)
+
+    def __repr__(self) -> str:
+        return f'Cell lvl{self.level}: {self.centre} \
+            {self.n_particles} particle'

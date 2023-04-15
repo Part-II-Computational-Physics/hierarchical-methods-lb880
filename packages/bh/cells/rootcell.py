@@ -36,36 +36,27 @@ class RootCell(Cell):
         Calculate the value of the potential for all particles
     """
 
-    def __init__(self, centre: complex, size: float, max_level: int,
-                 theta: float) -> None:
+    def __init__(self, centre: complex, size: float, particles: List[Particle],
+                 max_level: int, theta: float, n_crit: int = 2) -> None:
         
-        super().__init__(centre, size)
-
-        self.max_level:int = max_level
+        super().__init__(centre, size, None)
+        
+        self.particles: List[Particle] = particles
+        self.n_particles: int = len(particles)
+        self.max_level: int = max_level
         self.theta: float = theta
+        self.n_crit: int = n_crit
+
         self.cells: List[Cell] = [self]
     
-    def populate_with_particles(self, particles: List[Particle],
-                                n_crit: int = 2) -> None:
-        """Fill the tree with the given particles.
+    def create_tree(self) -> None:
+        """Distribute the particles in the root cell to the tree.
         Creating the tree as required.
-
-        Parameters
-        ----------
-        particles : List[Particle]
-            List of the `Particle` objects to add into the tree
-        n_crit : int
-            Number of particles in a cell that should be then split at.
-            Default of `n_crit = 2`, corresponding to one particle per cell.
         """
-
-        # add all the particles to own list
-        self.particles += particles
-        self.n_particles += len(particles)
         
         # then split if required
-        if self.n_particles >= n_crit:
-            self._split_cell(n_crit, self.max_level, self.cells)
+        if self.n_particles >= self.n_crit:
+            self._split_cell(self.max_level, self.cells)
 
     def populate_mass_CoM(self) -> None:
         """Calculate the total mass and CoM for every cell in the tree.
@@ -88,7 +79,7 @@ class RootCell(Cell):
         
         _print_CoM(self, 0)
 
-    def calculate_particle_potentials(self) -> None:
+    def evaluate_particle_potentials(self) -> None:
         """Calculate the value of the potential felt by every particle in the
         tree. Using the Barnes-Hut theta condition to decide if far or near
         field interaction.
