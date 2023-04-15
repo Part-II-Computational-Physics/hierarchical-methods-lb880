@@ -7,7 +7,7 @@ import numpy as np
 from scipy.special import binom
 
 from .cell import Cell
-from ...general import Particle
+from packages.general import Particle
 
 __all__ = ['Level', 'FinestLevel']
 
