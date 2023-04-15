@@ -1,5 +1,6 @@
 from typing import List
 
+import math
 import numpy as np
 
 from ..general import Particle
@@ -9,10 +10,15 @@ from .level import Level, FinestLevel
 __all__ = ['FMM']
 
 class FMM():
-    def __init__(self, precision: int, max_level: int, particles: List[Particle]) -> None:
-        self.precision: int = precision
-        self.max_level: int = max_level
+    def __init__(self, particles: List[Particle], precision: int, max_level: int = 0) -> None:
+        """Max level of 0 will initialise to 'correct' max_level"""
+
         self.particles: List[Particle] = particles
+        self.precision: int = precision
+        if max_level:
+            self.max_level: int = max_level
+        else:
+            self.max_level: int = int(0.5 * math.log2(len(particles)))
         self.levels: List[Level] = [Level(lvl, precision) for lvl in range(max_level)]
         self.finest_level: FinestLevel = FinestLevel(max_level, precision)
         self.levels.append(self.finest_level)

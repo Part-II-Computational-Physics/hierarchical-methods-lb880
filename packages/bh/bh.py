@@ -1,5 +1,6 @@
 from typing import List
 
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -9,11 +10,16 @@ from ..general import Particle
 __all__ = ['BH']
 
 class BH():
-    def __init__(self, particles: List[Particle], max_level: int, theta: float, n_crit:int = 2) -> None:
+    def __init__(self, particles: List[Particle], theta: float, n_crit:int = 2, max_level: int = 0) -> None:
+        """Max level of 0 will initialise to 'correct' max_level"""
+        
         self.particles: List[Particle] = particles
-        self.max_level: int = max_level
         self.theta: float = theta
         self.n_crit: int = n_crit
+        if max_level:
+            self.max_level: int = max_level
+        else:
+            self.max_level: int = int(math.log2(len(particles)))
 
     def create_root(self) -> None:
         self.root = cells.RootCell(0.5+0.5j, 1, self.particles, self.max_level, self.theta, self.n_crit)

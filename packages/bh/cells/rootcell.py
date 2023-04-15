@@ -37,15 +37,15 @@ class RootCell(Cell):
     """
 
     def __init__(self, centre: complex, size: float, particles: List[Particle],
-                 max_level: int, theta: float, n_crit: int = 2) -> None:
+                 theta: float, n_crit: int, max_level: int) -> None:
         
         super().__init__(centre, size, None)
         
         self.particles: List[Particle] = particles
         self.n_particles: int = len(particles)
-        self.max_level: int = max_level
         self.theta: float = theta
         self.n_crit: int = n_crit
+        self.max_level: int = max_level
 
         self.cells: List[Cell] = [self]
     
