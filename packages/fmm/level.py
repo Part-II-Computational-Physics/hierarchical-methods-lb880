@@ -16,15 +16,19 @@ class Level():
     ----------
     level_num : int
         The index of the given level, starting from 0.
-    precision : int
-        The precision to be used in the FMM algorithm.
+    terms : int
+        The numbers of terms to be used in the FMM algorithm.
+        Indexing these terms from zero means having terms `0` to `p`,
+        where `p = terms - 1` is the precision value as in FMM paper.
 
     Attributes
     ----------
     level_num : int
         The index of the given level, starting from 0.
-    precision : int
-        The precision to be used in the FMM algorithm.
+    terms : int
+        The numbers of terms to be used in the FMM algorithm.
+        Indexing these terms from zero means having terms `0` to `p`,
+        where `p = terms - 1` is the precision value as in FMM paper.
     axis_amount : int
         Number of cells across one axis in the level.
         Hence there are `axis_amount` by `axis_amount` cells in the level.
@@ -34,27 +38,27 @@ class Level():
         Next comes the multipole expansion, then the local expansion.
     """
 
-    def __init__(self, level_num: int, precision: int) -> None:
+    def __init__(self, level_num: int, terms: int) -> None:
         self.level_num: int = level_num
-        self.precision: int = precision
+        self.terms: int = terms
 
         self.axis_amount: int = 2**level_num
 
         # expansion array
         self.array = np.zeros((self.axis_amount, self.axis_amount,
-                               2*precision+1), dtype=complex)
+                               2*terms+1), dtype=complex)
         first_val = 1 / (2**(level_num+1))
         # stop of 1 as this is the so called max value, but will never appear
         vals = np.arange(first_val, 1, 2*first_val)
         X, Y = np.meshgrid(vals, vals, indexing='ij')
-        self.array[:,:,0] = complex(X, Y)
+        self.array[:,:,0] = X + 1j*Y
 
         # pre-made arrays for M2M, etc
         # M2L
-        self._minus_and_plus = np.ones(self.precision-1)
+        self._minus_and_plus = np.ones(self.terms-1)
         self._minus_and_plus[::2] = -1
-        self._k_M2L = np.arange(1, self.precision)
-        self._l_M2L = np.arange(1, self.precision)
+        self._k_M2L = np.arange(1, self.terms)
+        self._l_M2L = np.arange(1, self.terms)
     
     def zero_expansions(self) -> None:
         """Zero all terms in the expansion arrays."""
@@ -72,13 +76,13 @@ class Level():
         """
         for child in cell.children():
             child_multipole = \
-                child_level.array[child.index][1:self.precision+1]
+                child_level.array[child.index][1:self.terms+1]
 
             self.array[cell.index][1] += child_multipole[0]
 
             z0 = child_level.array[child.index][0] - self.array[cell.index][0]
 
-            for l in range(1,self.precision):
+            for l in range(1,self.terms):
                 k_vals = np.arange(1,l+1)
                 self.array[cell.index][l+1] \
                     += -(child_multipole[0] * z0**l / l) \
@@ -119,16 +123,16 @@ class Level():
         # local expansion 'about origin' (so about cell)
         z0 = self.array[interactor.index][0] - self.array[cell.index][0]
 
-        interactor_multipole = self.array[interactor.index][1:self.precision+1]
+        interactor_multipole = self.array[interactor.index][1:self.terms+1]
         
         minus_bk_over_z0k = self._minus_and_plus * interactor_multipole[1:] \
                             / z0**self._k_M2L
         
-        self.array[cell.index][self.precision+1] += interactor_multipole[0] \
+        self.array[cell.index][self.terms+1] += interactor_multipole[0] \
                                                     * np.log(-z0) \
                                                     + np.sum(minus_bk_over_z0k)
 
-        self.array[cell.index][self.precision+2:] \
+        self.array[cell.index][self.terms+2:] \
             += -interactor_multipole[0] / (self._l_M2L * z0**self._l_M2L) \
                 + (1/z0**self._l_M2L) * np.sum(
                         minus_bk_over_z0k * binom(
@@ -166,10 +170,10 @@ class Level():
             # ################################################
             # # Can definitely optimise the way this is done #
             # ################################################
-            for l in range(self.precision):
-                for k in range(l, self.precision):
-                    child_level.array[child.index][self.precision+1+l] \
-                        += self.array[cell.index][self.precision+1+k] \
+            for l in range(self.terms):
+                for k in range(l, self.terms):
+                    child_level.array[child.index][self.terms+1+l] \
+                        += self.array[cell.index][self.terms+1+k] \
                             * binom(k,l) * z0**(k-l)
 
     def L2L(self, child_level: 'Level') -> None:
@@ -199,8 +203,10 @@ class FinestLevel(Level):
     ----------
     level_num : int
         The index of the given level, starting from 0.
-    precision : int
-        The precision to be used in the FMM algorithm.
+    terms : int
+        The numbers of terms to be used in the FMM algorithm.
+        Indexing these terms from zero means having terms `0` to `p`,
+        where `p = terms - 1` is the precision value as in FMM paper.
 
     Attributes (Additional)
     ----------
@@ -209,13 +215,14 @@ class FinestLevel(Level):
         level.
     """
 
-    def __init__(self, level_num: int, precision: int) -> None:
-        super().__init__(level_num, precision)
+    def __init__(self, level_num: int, terms: int) -> None:
+        super().__init__(level_num, terms)
         self.particle_array: List[List[Set[Particle]]] \
             = [[set() for _ in range(self.axis_amount)]
                 for _ in range(self.axis_amount)]
         
-        self._l_eval = np.arange(self.precision)
+        self._k_multi = np.arange(1, self.terms)
+        self._l_eval = np.arange(self.terms)
 
     def _calculate_multipole(self, cell: Cell, particle: Particle) -> None:
         """Update the relevant cell's multipole due to the presence of the
@@ -235,9 +242,8 @@ class FinestLevel(Level):
 
         # remaining terms
         z0 = particle.centre - self.array[cell.index][0]
-        k_vals = np.arange(1, self.precision)
-        self.array[cell.index][2:self.precision+1] -= particle.charge \
-                                                    * z0**k_vals / k_vals
+        self.array[cell.index][2:self.terms+1] \
+                    -= particle.charge * z0**self._k_multi / self._k_multi
 
     def populate_with_particles(self, particles: List[Particle]) -> None:
         """Place the particles in `particle_array` and calculate their
@@ -297,7 +303,7 @@ class FinestLevel(Level):
                     self._neighbour_particles(Cell(x, y, self.level_num))
                 )
 
-                local = self.array[x, y, self.precision+1:]
+                local = self.array[x, y, self.terms+1:]
 
                 for particle in cell_particles:
                     # far field local expansion contribution

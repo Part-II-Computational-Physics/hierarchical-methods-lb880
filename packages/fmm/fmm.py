@@ -20,8 +20,10 @@ class FMM():
     ----------
     particles : List[Particle]
         List of `Particle` object to act on with the method.
-    precision : int
-        The precision to be used in the FMM algorithm.
+    terms : int
+        The numbers of terms to be used in the FMM algorithm.
+        Indexing these terms from zero means having terms `0` to `p`,
+        where `p = terms - 1` is the precision value as in FMM paper.
     max_level : int, optional
         The maximum depth of arrays to produce in the method.
         Default value of -1 chooses value of log2(number of particles),
@@ -31,7 +33,7 @@ class FMM():
     ----------
     particles : List[Particle]
         List of `Particle` object to act on with the method.
-    precision : int
+    terms : int
         The precision to be used in the FMM algorithm.
     max_level : int
         The maximum depth of arrays to produce in the method.
@@ -45,18 +47,18 @@ class FMM():
         Equivalent to `levels[-1]`.
     """
 
-    def __init__(self, particles: List[Particle], precision: int,
+    def __init__(self, particles: List[Particle], terms: int,
                  max_level: int = -1) -> None:
         self.particles: List[Particle] = particles
-        self.precision: int = precision
+        self.terms: int = terms
         if max_level > -1:
             self.max_level: int = max_level
         else:
             self.max_level: int = int(0.5 * math.log2(len(particles)))
 
         self.levels: List[Level] \
-            = [Level(lvl, precision) for lvl in range(self.max_level)]
-        self.finest_level: FinestLevel = FinestLevel(self.max_level, precision)
+            = [Level(lvl, terms) for lvl in range(self.max_level)]
+        self.finest_level: FinestLevel = FinestLevel(self.max_level, terms)
         self.levels.append(self.finest_level)
 
     def upward_pass(self) -> None:
