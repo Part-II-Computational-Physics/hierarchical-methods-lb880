@@ -3,27 +3,30 @@ import numpy as np
 __all__ = ['Point']
 
 class Point():
-    """General point class
+    """Class to describe points in the 2D space. Centres described with complex
+    numbers.
     
+    Parameters
+    ----------
+    centre : complex, optional
+        Complex coordinates of point, random in box size 1 if no argument
+        given.
+
     Attributes
     ----------
     centre : complex
-        Coords of point, random if no argument given
-
-    Methods
-    -------
-    distance : float
-        Return distance to another point
+        Complex coordinates of point, random in box size 1 if no argument
+        given.
     """
 
-    def __init__(self, centre:complex=None) -> None:
+    def __init__(self, centre: complex = None) -> None:
         if centre:
-            self.centre:complex = centre
+            self.centre: complex = centre
         else:
-            self.centre:complex = np.random.random() + 1j*np.random.random()
+            self.centre: complex = complex(
+                np.random.random(), np.random.random()
+            )
     
     def __repr__(self) -> str:
         return f'Point: {self.centre}'
-
-    def distance(self, other:'Point'):
-        return abs(self.centre - other.centre)
+    

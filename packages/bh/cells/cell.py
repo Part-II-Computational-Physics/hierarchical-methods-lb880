@@ -7,50 +7,59 @@ from ...general import Point, Particle
 __all__ = ['Cell']
 
 class Cell(Point):
-    """Class for cells that tree constructed from
+    """Cells used to construct the Barnes-Hut tree.
     
-    Inherits from Point
+    Inherits from `Point`.
     
+    Parameters
+    ----------
+    centre : complex
+        Complex coordinates of the centre of the cell.
+    size : float
+        Size of the side of the box.
+    parent : Cell
+        The parent cell.
+    n_crit : int
+        Number of particles in a cell to split at.
+        Default value of `2` will leave one particle per leaf cell (as each
+        cell splits when it has 2 particles in it).
+
     Attributes
     ----------
     centre : complex
-        Coords of point. Random if no argument given
+        Complex coordinates of the centre of the cell.
     size : float
-        Size of the side of a box
+        Size of the side of the box.
     level : int
-        Level number (start at 0) in tree
+        Level number (starting from 0) where the cell is in the tree.
     parent : Cell
-        The parent cell
-    level_coords : tuple of int
-        Index coords of where the cell sits in its level
-
-
+        The parent cell.
+    n_crit : int
+        Number of particles in a cell to split at.
+        e.g. value of `2` will leave one particle per leaf cell (as each cell
+        splits when it has 2 particles in it).
     n_particles : int
-        Number of particles in cell
+        Number of particles in the cell.
     particles : List[Particle]
-        List of particles contained
-
-    bit_children : bitwise
-        Child locations eg, child in 2 and 4 is 1010
+        List of particles contained with in the cell. 
+    bit_children : 4-bit
+        Child location storage.
+        eg. child in 2 and 4 is 1010
     children : List[Cell]
-        Cells children
-
-    Methods
-    -------
-    print_tree
-        Print the tree from this cell as the root
+        List of the children cells (ordered so the first item is bitwise 0001).
     """
 
-    def __init__(self, centre: complex, size: float, parent: 'Cell', n_crit: int = 2) -> None:
+    def __init__(self, centre: complex, size: float, parent: 'Cell',
+                 n_crit: int) -> None:
         
         super().__init__(centre)
 
         self.size: float = size
 
         if parent:
-            self.level:int = parent.level + 1
+            self.level: int = parent.level + 1
         else:
-            self.level:int = 0
+            self.level: int = 0
 
         self.parent: 'Cell' = parent
 
@@ -64,20 +73,20 @@ class Cell(Point):
 
     def _add_child(self, quadrant: int, cells: List['Cell']) -> None:
         """Add new child to the cell in given quadrant.
-        Create relevant references in cell object, and in given cells list.
+        Creates relevant references in cell object, and in given cells list.
 
         Parameters
         ----------
         quadrant : int
-            The quadrant to add the child to
+            The quadrant of the parent the child is added to.
         cells : List[Cell]
-            List of all cells in the tree to append the child to
+            List of all cells in the tree to append the child to.
         """
 
         # bitwise operations to determine the coords of the child centre
         #   if left or right
         #   then if up or down, and apply appropriate shift
-        # (if both yeild 0, then bottom left, otherwise relative to there) 
+        # (if both yeild 0, then bottom left, otherwise relative to there)
         child_centre =  self.centre + 0.25 * self.size \
             * ((-1+2*(quadrant & 1)) + 1j*(-1+2*((quadrant & 2)>>1)))
         
@@ -93,42 +102,35 @@ class Cell(Point):
         cells.append(self.children[quadrant])
 
     def _quadrant(self, centre: complex) -> int:
-        """Return int 0 to 3 corresponding to the given `centre`'s quadrant
-        relative to self. 
-        E.g. the quadrant to add a child too due to an added particle.
+        """Return integer 0 to 3 corresponding to the given `centre`'s quadrant
+        relative to the cell. 
+        Eg. the quadrant to add a new child too due to an added particle.
 
         Parameters
         ----------
         centre : complex
-            Complex coordinates of the location to find quadrant
+            Complex coordinates of the location to find the quadrant for.
 
         Returns
         -------
         quadrant : int
             Integer 0-3 corresponding to the quadrant.
-            0 bottom left, 1 bottom right, 2 top left, 3 top right
+            0 bottom left, 1 bottom right, 2 top left, 3 top right.
         """
 
-        # int 0 to 3
         return (centre.real > self.centre.real) \
                 | (centre.imag > self.centre.imag)<<1
     
-    def _split_cell(self, max_level: int, cells: List['Cell']
-                    ) -> None:
-        """Splits self cell, distributing children and creating child cells as
-        needed.
+    def _split_cell(self, max_level: int, cells: List['Cell']) -> None:
+        """Splits the cell, distributing particles to children with children
+        cells created as needed.
         
         Parameters
         ----------
-        n_crit : int
-            Number of particles in a cell that should be then split at.
-            (Used to initialise children)
         max_level : int
-            Maximum level to recurse to in the tree. 
-            (Used to initialise children)
+            Maximum level to recurse to in the tree.
         cells : List[Cell]
             List of all cells in the tree.
-            (Used to initalise children)
         """
 
         for particle in self.particles:
@@ -144,20 +146,19 @@ class Cell(Point):
             self.children[quadrant]._add_particle(particle, max_level,
                                                   cells)
         
-    def _add_particle(self, particle: Particle, max_level: int, cells: List['Cell']) -> None:
-        """Add a particle to the given cell, splitting the cell if required
+    def _add_particle(self, particle: Particle, max_level: int,
+                      cells: List['Cell']) -> None:
+        """Add a particle to the given cell, splitting the cell or distributing
+        child to children if required.
         
         Parameters
         ----------
         particle : Particle
-            The particle to be add
-        n_crit : int
-            Number of particles in a cell that should be then split at
+            The particle to be added to the cell.
         max_level : int
-            Maximum level to recurse to in the tree
+            Maximum level to recurse to in the tree.
         cells : List[Cell]
             List of all cells in the tree.
-            (Used to add any newly created cells)
         """
 
         self.n_particles += 1
@@ -187,6 +188,7 @@ class Cell(Point):
         If a leaf this is calculated due to the contribution of all the cells.
         If a branch this is calulated due to the contribution of children.
         """
+
         if not self.bit_children: # leaf
             masses = np.array(
                 [particle.charge for particle in self.particles])
@@ -204,6 +206,14 @@ class Cell(Point):
         self.CoM = np.sum(masses * centres) / self.total_mass
 
     def print_tree(self, level: int = 0) -> None:
+        """Print the tree from this cell downwards. 
+        Best used for a `RootCell`.
+
+        Parameters
+        ----------
+        level : int, default 0
+            Controls number of tabs print is indented by.
+        """
         level_coords = (
             int(self.centre.real * 2**(self.level) -0.5),
             int(self.centre.imag * 2**(self.level) -0.5)

@@ -8,38 +8,45 @@ from ...general import Particle
 __all__ = ['RootCell']
 
 class RootCell(Cell):
-    """Class for the root cell of the tree. Methods used to act on the whole
-    tree.
+    """Class for the root cell of the Barnes-Hut tree. Methods used to act on
+    the whole tree.
 
-    Inherits from `Cell`
+    Inherits from `Cell`.
+
+    Parameters
+    ----------
+    centre : complex
+        Complex coordinates of the centre of the cell.
+    size : float
+        Size of the side of the box.
+    particles : List[Particle]
+        The list of `Particle` objects to add into the tree.
+    theta : float
+        Value of theta to use in the Barnes-Hut algorithm.
+        Lower value has greater accuracy at compute time cost.
+        `theta = 0.5` 'typical.
+    n_crit : int
+        Number of particles in a cell to split at.
+        Default value of `2` will leave one particle per leaf cell (as each
+        cell splits when it has 2 particles in it).
+    max_level : int
+        The maximum depth the tree is allowed to recurse to.
     
     Attributes (Additional)
     ----------
-    max_level : int
-        the max depth the tree is allowed to go to
     theta : float
         Value of theta to use in the Barnes-Hut algorithm.
         Lower value has greater accuracy at compute time cost.
         `theta = 0.5` 'typical'.
+    max_level : int
+        The maximum depth the tree is allowed to recurse to.
     cells : List[Cell]
         List of all cells in the tree, in order they were created
-
-    Methods (Additional)
-    -------
-    populate_with_particles
-        Fill tree with given particles
-    populate_mass_CoM
-        Populate the tree with masses and CoMs
-    print_tree_CoMs
-        Print the tree with total mass and CoMs
-    calculate_particle_potentials
-        Calculate the value of the potential for all particles
     """
 
     def __init__(self, centre: complex, size: float, particles: List[Particle],
                  theta: float, n_crit: int, max_level: int) -> None:
-        
-        super().__init__(centre, size, None)
+        super().__init__(centre, size, parent=None)
         
         self.particles: List[Particle] = particles
         self.n_particles: int = len(particles)
@@ -50,26 +57,23 @@ class RootCell(Cell):
         self.cells: List[Cell] = [self]
     
     def create_tree(self) -> None:
-        """Distribute the particles in the root cell to the tree.
-        Creating the tree as required.
+        """Create the full Barnes-Hut tree by distributing the particles in the
+        root cell.
         """
         
-        # then split if required
+        # split if more particles than n_crit
         if self.n_particles >= self.n_crit:
             self._split_cell(self.max_level, self.cells)
 
     def populate_mass_CoM(self) -> None:
-        """Calculate the total mass and CoM for every cell in the tree.
-        Uses the `Cell._get_mass_and_CoM` method.
-        """
+        """Calculate the total mass and CoM for every cell in the tree."""
 
         # iterate from leaf nodes first
         for cell in reversed(self.cells):
             cell._get_mass_CoM()
     
     def print_tree_CoMs(self) -> None:
-        """Print all the total masses and CoM in the tree
-        """
+        """Print all the total masses and CoM in the tree."""
 
         def _print_CoM(cell: Cell, level: int):
             print('\t'*level, cell.total_mass, cell.CoM, cell)
@@ -84,7 +88,7 @@ class RootCell(Cell):
         tree. Using the Barnes-Hut theta condition to decide if far or near
         field interaction.
         
-        Require total masses and CoM of all cells to have been calculated.
+        Requires total masses and CoM of all cells to have been calculated.
         """
 
         def _interact_with_cell(particle: Particle, cell: Cell) -> None:

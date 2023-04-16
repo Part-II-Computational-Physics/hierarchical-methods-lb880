@@ -10,24 +10,60 @@ from .level import Level, FinestLevel
 __all__ = ['FMM']
 
 class FMM():
-    def __init__(self, particles: List[Particle], precision: int, max_level: int = 0) -> None:
-        """Max level of 0 will initialise to 'correct' max_level"""
+    """Class to hold the Fast Multipole Method for N-Body Interaction.
+    Calculates multipole expansions due the particles in cells, to then
+    calculate local expansions for every cell due to the far-field interaction
+    of particles. This can then be used to evaluate the action due to those far
+    fild particles.
 
+    Parameters
+    ----------
+    particles : List[Particle]
+        List of `Particle` object to act on with the method.
+    precision : int
+        The precision to be used in the FMM algorithm.
+    max_level : int, optional
+        The maximum depth of arrays to produce in the method.
+        Default value of -1 chooses value of log2(number of particles),
+        (approx one particle per cell).
+
+    Attributes
+    ----------
+    particles : List[Particle]
+        List of `Particle` object to act on with the method.
+    precision : int
+        The precision to be used in the FMM algorithm.
+    max_level : int
+        The maximum depth of arrays to produce in the method.
+        Default value of -1 chooses value of log2(number of particles),
+        (approx one particle per cell).
+    levels : List[Level]
+        Collection of the progressively finer level arrays, wrapped as `Level`
+        objects.
+    finest_level : FinestLevel
+        The finest grained level used in the method.
+        Equivalent to `levels[-1]`.
+    """
+
+    def __init__(self, particles: List[Particle], precision: int,
+                 max_level: int = -1) -> None:
         self.particles: List[Particle] = particles
         self.precision: int = precision
-        if max_level:
+        if max_level > -1:
             self.max_level: int = max_level
         else:
             self.max_level: int = int(0.5 * math.log2(len(particles)))
-        self.levels: List[Level] = [Level(lvl, precision) for lvl in range(self.max_level)]
+
+        self.levels: List[Level] \
+            = [Level(lvl, precision) for lvl in range(self.max_level)]
         self.finest_level: FinestLevel = FinestLevel(self.max_level, precision)
         self.levels.append(self.finest_level)
 
     def upward_pass(self) -> None:
         """Perform the upward pass on the array structre. 
-        Starting from the second finest grained array perform M2M to propogate the
-        multipoles up the structure. Does not perform on finest grained, as this is
-        where the multipoles should have been calculated for.
+        Starting from the second finest grained array perform M2M to propogate
+        the multipoles up the structure. Does not perform on finest grained,
+        as this is where the multipoles should have been calculated for.
         """
 
         # Moves backwards through levels, from 2nd to last level
@@ -35,10 +71,11 @@ class FMM():
             self.levels[level_num].M2M(self.levels[level_num+1])
 
     def downward_pass(self) -> None:
-        """Perform downward pass on the expansion arrays to calculate all of the
-        local expansions for each cell.
-        M2L is used to get local contributions for each cell from its interaction
-        list, and the L2L used to shift the local expansion to the children.
+        """Perform downward pass on the expansion arrays to calculate all of
+        the local expansions for each cell.
+        M2L is used to get local contributions for each cell from its
+        interaction list, and the L2L used to shift the local expansion to the
+        children.
 
         L2L not done from final level as no children.
         M2L and L2L not done on/from coarsest two levels for open boundary
@@ -55,7 +92,9 @@ class FMM():
         # no L2L for finest level, no children
         self.finest_level.M2L()
 
-    def do_fmm(self, zero_expansions: bool = False, zero_potentials: bool = False, zero_forces: bool = False) -> None:
+    def do_fmm(self, zero_expansions: bool = False,
+               zero_potentials: bool = False, zero_forces: bool = False
+               ) -> None:
         """Updates particle potentials using the full FMM method, with the
         given parameters
         

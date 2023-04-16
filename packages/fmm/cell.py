@@ -1,8 +1,3 @@
-"""Cell class does operations on index and level of cell
-
-Focused on cell relations, not actions
-"""
-
 from typing import List, Tuple, Set
 
 from ..general import Particle
@@ -10,17 +5,28 @@ from ..general import Particle
 __all__ = ['Cell']
 
 class Cell():
+    """Class for operation on cell indices for the FMM method. 
+
+    Attributes
+    ----------
+    index : Tuple[int]
+        The `(x,y)` of the cell in the level.
+        Referencing the array as `array[x,y]`.
+    level : int
+        The depth of the array the cell exists in, starting from 0.
+    """
+
     def __init__(self, x: int, y: int, level: int) -> None:
         self.index: Tuple[int] = (x, y)
         self.level: int = level
 
     def children(self) -> List['Cell']:
-        """Returns children `Index`s
+        """Returns the children cells' locations, ordered from bottom left.
 
         Returns
         -------
-        child_index : List[Index]
-            List of Index of children
+        child_index : List[Cell]
+            List of cell locations of the children.
         """
 
         x, y = self.index
@@ -32,23 +38,23 @@ class Cell():
         ]
 
     def parent(self) -> 'Cell':
-        """Returns parent `Index`
+        """Returns the parent cell's location.
         
         Returns
         -------
         parent_index : Index
-            Index of parent
+            Cell location of the parent to the cell.
         """
 
         return Cell(self.index[0]//2, self.index[1]//2, self.level - 1)
     
     def neighbours(self) -> Set['Cell']:
-        """Returns nearest neighbour `Index`s
+        """Returns nearest neighbours to the index, as a set.
         
         Returns
         -------
         neighbours : Set[Index]
-            Set of indicies of neighbours
+            Set of locations of the cell's neighbours.
         """
 
         if self.level == 0:
@@ -83,12 +89,12 @@ class Cell():
         return neighbours
     
     def interaction_list(self) -> Set['Cell']:
-        """Returns interaction list
+        """Returns the interaction list of the cell.
         
         Returns
         -------
-        interactors : Set[Index]
-            Set of `Index`s for cells in the interation list
+        interactors : Set[Cell]
+            Set of the cell locations in the interation list.
         """
 
         # top two levels have no interaction list
@@ -103,22 +109,21 @@ class Cell():
     
     @classmethod
     def particle_cell(self, particle: Particle, level: int) -> 'Cell':
-        """Returns cell coordinates in which the given particle lies
-        
-        (Coordinates are matrix indicies)
+        """Returns cell location in which the given particle lies, in the
+        given level.
         
         Parameters
         ----------
         particle : Particle
-            Particle for which to find coordinates
+            Particle for which to find location.
         level : int
-            The level the nearest neighbours are to be calculated for, 
-            indexed from 0 for the coarsest level
+            The level the location of the particle is to be calculated for, 
+            indexed from 0 for the coarsest level.
         
         Returns
         -------
-        cell_index : Index
-            `Index` object for the cell the particle is in
+        Cell
+            `Cell` object of the particle's location.
         """
 
         return Cell(
