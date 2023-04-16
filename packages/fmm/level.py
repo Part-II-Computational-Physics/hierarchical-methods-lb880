@@ -236,7 +236,8 @@ class FinestLevel(Level):
         # remaining terms
         z0 = particle.centre - self.array[cell.index][0]
         k_vals = np.arange(1, self.precision)
-        self.array[cell.index][2:self.precision+1] -= particle.charge * z0**k_vals / k_vals
+        self.array[cell.index][2:self.precision+1] -= particle.charge \
+                                                    * z0**k_vals / k_vals
 
     def populate_with_particles(self, particles: List[Particle]) -> None:
         """Place the particles in `particle_array` and calculate their
