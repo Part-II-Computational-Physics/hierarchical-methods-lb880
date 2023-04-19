@@ -312,8 +312,8 @@ class FinestLevel(Level):
 
                     w_prime = np.sum(
                         self._l_eval[1:] * local[1:] * z0**self._l_eval[:-1])
-                    particle.force += particle.charge \
-                        * np.array((w_prime.real, -w_prime.imag))
+                    particle.force_per \
+                                += np.array((w_prime.real, -w_prime.imag))
 
                     # near-field
                     # near particles excluding the own particle
@@ -321,7 +321,7 @@ class FinestLevel(Level):
                         z0 = particle.centre - other.centre
                         particle.potential -= other.charge * np.log(abs(z0))
                         
-                        particle.force += particle.charge * other.charge \
+                        particle.force_per += other.charge \
                             * np.array((z0.real, z0.imag)) / abs(z0)**2
 
     def __repr__(self) -> str:

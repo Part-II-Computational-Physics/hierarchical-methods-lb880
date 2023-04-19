@@ -14,7 +14,7 @@ from . import Particle
 
 __all__ = ['potentials', 'forces']
 
-def potentials(particles: List[Particle], zero_potentials: bool = False
+def potentials(particles: List[Particle], zero_potentials: bool = True
                ) -> None:
     """Calculate through pairwise interactions the particle potentials and
     store in `Particle` object attribute.
@@ -23,9 +23,9 @@ def potentials(particles: List[Particle], zero_potentials: bool = False
     ----------
     particles : List[Particle]
         List of the `Particle` objects to calculate the direct potentials for.
-    zero_potentials : bool, default False
+    zero_potentials : bool, default True
         Controls if particle potentials are reset to zero in the process.
-        Default of False leaves potentials unchanged.
+        Default of `True` resets direct potentials first.
     """
 
     if zero_potentials:
@@ -38,7 +38,7 @@ def potentials(particles: List[Particle], zero_potentials: bool = False
             particle.direct_potential += other.charge * potential
             other.direct_potential += particle.charge * potential
 
-def forces(particles: List[Particle], zero_forces: bool = False) -> None:
+def forces(particles: List[Particle], zero_forces: bool = True) -> None:
     """Calculate through pairwise interactions the particle potentials and
     store in `Particle` object attribute.
     
@@ -46,19 +46,19 @@ def forces(particles: List[Particle], zero_forces: bool = False) -> None:
     ----------
     particles : List[Particle]
         List of the `Particle` objects to calculate the direct forces for.
-    zero_forces : bool, default False
+    zero_forces : bool, default True
         Controls if particle forces are reset to zero in the process.
-        Default of False leaves potentials unchanged.
+        Default of `True` resets direct forces first.
     """
 
     if zero_forces:
         for particle in particles:
-            particle.direct_force = np.zeros(2, dtype=float)
+            particle.direct_force_per = np.zeros(2, dtype=float)
 
     for i, particle in enumerate(particles):
         for other in particles[i+1:]:
             z0 = particle.centre - other.centre
-            force = particle.charge * other.charge \
-                * np.array((z0.real, z0.imag)) / abs(z0)**2
-            particle.direct_force += force
-            other.direct_force -= force
+            # over_r the 1/r term, or force per self*other charge
+            over_r = np.array((z0.real, z0.imag)) / abs(z0)**2
+            particle.direct_force_per += other.charge * over_r
+            other.direct_force_per -= particle.charge * over_r

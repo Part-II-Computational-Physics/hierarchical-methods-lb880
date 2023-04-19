@@ -94,20 +94,23 @@ class FMM():
         # no L2L for finest level, no children
         self.finest_level.M2L()
 
-    def do_fmm(self, zero_expansions: bool = False,
-               zero_potentials: bool = False, zero_forces: bool = False
+    def do_fmm(self, zero_expansions: bool = True,
+               zero_potentials: bool = True, zero_forces: bool = True
                ) -> None:
         """Updates particle potentials using the full FMM method, with the
         given parameters
         
         Parameters
         ----------
-        zero_potentials : bool
-            Controls if particle potentials are explicitly reset to zero in the
-            process. Default of False (does not change the potentials)
-        zero_forces : bool
-            Controls if particle forces are explicitly reset to zero in the
-            process. Default of False (does not change the potentials)
+        zero_expansions : bool, default True
+            Controls if level expansions are reset to zero in the process.
+            Default of True resets.
+        zero_potentials : bool, default True
+            Controls if particle potentials are reset to zero in the process.
+            Default of True resets.
+        zero_forces : bool, default True
+            Controls if particle forces are reset to zero in the process.
+            Default of True resets.
         """
         if zero_expansions:
             for level in self.levels:
@@ -117,7 +120,7 @@ class FMM():
                 particle.potential = 0.0
         if zero_forces:
             for particle in self.particles:
-                particle.force = np.zeros(2, dtype=float)
+                particle.force_per = np.zeros(2, dtype=float)
 
         self.finest_level.populate_with_particles(self.particles)
         self.upward_pass()

@@ -33,8 +33,10 @@ class Particle(Point):
         if no argument given, random in range [-1,1).
     potential : float
         To store evaluated potential.
-    force : 2DArray
-        To store evaluated force.
+    force_per : 2DArray
+        To store evaluated force per unit charge. For gravitational, this is
+        then the acceleration, for EM, acceleration is `force_per` times charge
+        over inertial mass ratio. 
     """
 
     def __init__(self, charge: float = None, centre: complex = None,
@@ -51,7 +53,7 @@ class Particle(Point):
                 self.charge:float = 2*np.random.random() - 1
 
         self.potential: float = 0.0
-        self.force: NDArray = np.zeros(2)
+        self.force_per: NDArray = np.zeros(2)
 
     def __repr__(self) -> str:
         return f'Particle: {self.centre}, charge {self.charge}'

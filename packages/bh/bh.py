@@ -21,6 +21,9 @@ class BH():
         Value of theta to use in the Barnes-Hut algorithm.
         Lower value has greater accuracy at compute time cost.
         `theta = 0.5` 'typical'.
+    terms : int, options
+        Number of terms in the 'expansion of the multipole'. If default of `1`
+        then uses CoM method instead.
     n_crit : int, default 2
         Number of particles in a cell to split at.
         Default value of `2` will leave one particle per leaf cell (as each
@@ -37,6 +40,9 @@ class BH():
     theta : float
         Value of theta to use in the Barnes-Hut algorithm.
         Lower value has greater accuracy at compute time cost.
+    terms : int
+        Number of terms in the 'expansion of the multipole'. If `0` then uses
+        CoM method instead.
     n_crit : int
         Number of particles in a cell to split at.
         Default value of `2` will leave one particle per leaf cell (as each
@@ -49,11 +55,12 @@ class BH():
         The root of the Barnes-Hut tree.
     """
 
-    def __init__(self, particles: List[Particle], theta: float,
+    def __init__(self, particles: List[Particle], theta: float, terms: int = 0,
                  n_crit: int = 2, max_level: int = -1) -> None:
         self.particles: List[Particle] = particles
         self.theta: float = theta
         self.n_crit: int = n_crit
+        self.terms: int = terms
         if max_level > -1:
             self.max_level: int = max_level
         else:
@@ -64,27 +71,37 @@ class BH():
     def create_root(self) -> None:
         """Create root cell as `RootCell` object."""
         self.root = cells.RootCell(0.5+0.5j, 1, self.particles, self.theta,
-                                   self.n_crit, self.max_level)
+                                   self.terms, self.n_crit, self.max_level)
 
-    def do_bh(self, zero_potentials: bool = False):
+    def do_bh(self, zero_potentials: bool = True, zero_forces: bool = True):
         """Perform the full Barnes-Hut algorithm. Constructing the tree and
         evaluating the particles.
 
         Parameters
         ----------
-        zero_potentials : bool, default False
+        zero_potentials : bool, default True
             Controls if particle potentials are reset to zero in the process.
-            Default of False leaves potentials unchanged.
+            Default of True resets.
+        zero_forces : bool, default True
+            Controls if particle forces are reset to zero in the process.
+            Default of True resets.
         """
 
         if zero_potentials:
             for particle in self.particles:
                 particle.potential = 0.0
+        if zero_forces:
+            for particle in self.particles:
+                particle.force_per = np.zeros(2, dtype=float)
         
         self.create_root()
         self.root.create_tree()
-        self.root.populate_mass_CoM()
-        self.root.evaluate_particle_potentials()
+        if self.terms > 0:
+            self.root.populate_multipoles()
+            self.root.evaluate_particle_potentials()
+        else:
+            self.root.populate_mass_CoM()
+            self.root.evaluate_particle_potentials(use_CoM_far=True)
 
     def plot(self, fmm_grid: bool = False):
         """Plot the particles positions, with the particle positions overlain.

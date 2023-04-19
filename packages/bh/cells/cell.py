@@ -1,6 +1,7 @@
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
+from scipy.special import binom
 
 from ...general import Point, Particle
 
@@ -19,6 +20,9 @@ class Cell(Point):
         Size of the side of the box.
     parent : Cell
         The parent cell.
+    terms : int
+        Number of terms in the 'expansion of the multipole'. If `1` then uses
+        CoM method instead.
     n_crit : int
         Number of particles in a cell to split at.
         Default value of `2` will leave one particle per leaf cell (as each
@@ -34,6 +38,9 @@ class Cell(Point):
         Level number (starting from 0) where the cell is in the tree.
     parent : Cell
         The parent cell.
+    terms : int
+        Number of terms in the 'expansion of the multipole'. If `0` then uses
+        CoM method instead.
     n_crit : int
         Number of particles in a cell to split at.
         e.g. value of `2` will leave one particle per leaf cell (as each cell
@@ -50,7 +57,7 @@ class Cell(Point):
     """
 
     def __init__(self, centre: complex, size: float, parent: 'Cell',
-                 n_crit: int) -> None:
+                 terms: int, n_crit: int) -> None:
         
         super().__init__(centre)
 
@@ -62,6 +69,10 @@ class Cell(Point):
             self.level: int = 0
 
         self.parent: 'Cell' = parent
+
+        self.terms: int = terms
+        if terms > 0:
+            self.multipole: int = np.zeros(terms, dtype=complex)
 
         self.n_crit: int = n_crit
 
@@ -94,6 +105,7 @@ class Cell(Point):
         self.children[quadrant] = Cell(centre = child_centre,
                                        size = self.size/2,
                                        parent = self,
+                                       terms = self.terms,
                                        n_crit =  self.n_crit)
         # store in bitchildren
         self.bit_children += (1<<quadrant)
@@ -204,6 +216,38 @@ class Cell(Point):
         # calculate total mass and centre of mass
         self.total_mass = np.sum(masses)
         self.CoM = np.sum(masses * centres) / self.total_mass
+
+    def _calculate_multipole(self) -> None:
+        """Update the cell's multipole due to the presence of the particles
+        within.
+        """
+
+        for particle in self.particles:
+            # first term
+            self.multipole[0] += particle.charge
+
+            # remaining terms
+            z0 = particle.centre - self.centre
+            k_vals = np.arange(1, self.terms)
+            self.multipole[1:self.terms+1] -= particle.charge \
+                                            * z0**k_vals / k_vals
+            
+    def _M2M(self) -> None:
+        """Use the M2M operation to generate the multipole the cell due to its
+        children.
+        """
+        for child in self.children:
+            if child:
+
+                self.multipole[0] += child.multipole[0]
+
+                z0 = child.centre - self.centre
+
+                for l in range(1,self.terms):
+                    k_vals = np.arange(1,l+1)
+                    self.multipole[l] += -(child.multipole[0] * z0**l / l) \
+                        + np.sum(child.multipole[1:l+1] \
+                                 * z0**(l-k_vals) * binom(l-1, k_vals-1))
 
     def print_tree(self, level: int = 0) -> None:
         """Print the tree from this cell downwards. 
