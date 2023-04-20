@@ -30,13 +30,13 @@ def potentials(particles: List[Particle], zero_potentials: bool = True
 
     if zero_potentials:
         for particle in particles:
-            particle.direct_potential = 0.0
+            particle.potential = 0.0
 
     for i, particle in enumerate(particles):
         for other in particles[i+1:]:
             potential = - math.log(abs(particle.centre - other.centre))
-            particle.direct_potential += other.charge * potential
-            other.direct_potential += particle.charge * potential
+            particle.potential += other.charge * potential
+            other.potential += particle.charge * potential
 
 def forces(particles: List[Particle], zero_forces: bool = True) -> None:
     """Calculate through pairwise interactions the particle potentials and
@@ -53,12 +53,12 @@ def forces(particles: List[Particle], zero_forces: bool = True) -> None:
 
     if zero_forces:
         for particle in particles:
-            particle.direct_force_per = np.zeros(2, dtype=float)
+            particle.force_per = np.zeros(2, dtype=float)
 
     for i, particle in enumerate(particles):
         for other in particles[i+1:]:
             z0 = particle.centre - other.centre
             # over_r the 1/r term, or force per self*other charge
             over_r = np.array((z0.real, z0.imag)) / abs(z0)**2
-            particle.direct_force_per += other.charge * over_r
-            other.direct_force_per -= particle.charge * over_r
+            particle.force_per += other.charge * over_r
+            other.force_per -= particle.charge * over_r
