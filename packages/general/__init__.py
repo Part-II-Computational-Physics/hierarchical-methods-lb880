@@ -8,4 +8,5 @@ and pairwise interaction methods.
 from .point import Point
 from .particle import Particle
 
-from . import pairwise
+from .method import Method
+from .pairwise import Pairwise

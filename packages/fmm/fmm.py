@@ -3,13 +3,13 @@ from typing import List
 import math
 import numpy as np
 
-from ..general import Particle
+from ..general import Method, Particle
 
 from .level import Level, FinestLevel
 
 __all__ = ['FMM']
 
-class FMM():
+class FMM(Method):
     """Class to hold the Fast Multipole Method for N-Body Interaction.
     Calculates multipole expansions due the particles in cells, to then
     calculate local expansions for every cell due to the far-field interaction
@@ -49,7 +49,7 @@ class FMM():
 
     def __init__(self, particles: List[Particle], terms: int,
                  max_level: int = -1) -> None:
-        self.particles: List[Particle] = particles
+        super().__init__(particles)
         self.terms: int = terms
         if max_level > -1:
             self.max_level: int = max_level
@@ -94,7 +94,7 @@ class FMM():
         # no L2L for finest level, no children
         self.finest_level.M2L()
 
-    def do_fmm(self, zero_expansions: bool = True,
+    def do_method(self, zero_expansions: bool = True,
                zero_potentials: bool = True, zero_forces: bool = True
                ) -> None:
         """Updates particle potentials using the full FMM method, with the
