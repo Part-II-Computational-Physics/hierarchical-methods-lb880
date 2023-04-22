@@ -70,6 +70,7 @@ class Pairwise(Method):
                 particle.force_per += other.charge * over_r
                 other.force_per -= particle.charge * over_r
     
-    def do_method(self):
-        self.potentials(self.particles)
-        self.forces(self.particles)
+    def do_method(self, zero_potentials: bool = True, zero_forces: bool = True
+                  ) -> None:
+        self.potentials(self.particles, zero_potentials)
+        self.forces(self.particles, zero_forces)
