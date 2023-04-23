@@ -5,11 +5,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from . import cells
-from ..general import Method, Particle
+from ..general import Particle
 
 __all__ = ['BH']
 
-class BH(Method):
+class BH():
     """Class to hold the Barnes-Hut method of N-Body Interaction. Constructs a
     tree for the particles, used to approximate far-field interactions.
 
@@ -57,7 +57,7 @@ class BH(Method):
 
     def __init__(self, particles: List[Particle], theta: float, terms: int = 0,
                  n_crit: int = 2, max_level: int = -1) -> None:
-        super().__init__(particles)
+        self.particles: List[Particle] = particles
         self.theta: float = theta
         self.n_crit: int = n_crit
         self.terms: int = terms

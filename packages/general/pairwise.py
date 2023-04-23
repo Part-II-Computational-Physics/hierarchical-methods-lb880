@@ -10,13 +10,13 @@ from typing import List
 import math
 import numpy as np
 
-from . import Method, Particle
+from . import Particle
 
 __all__ = ['Pairwise']
 
-class Pairwise(Method):
+class Pairwise():
     def __init__(self, particles: List[Particle]):
-        super().__init__(particles)
+        self.particles: List[Particle] = particles
 
     @staticmethod
     def potentials(particles: List[Particle], zero_potentials: bool = True

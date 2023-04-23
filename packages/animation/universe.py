@@ -3,15 +3,15 @@ from numpy.typing import NDArray
 
 import numpy as np
 
-from ..general import Method, Particle
+from ..general import Particle
 from .. import general
 
 class Universe():
 
-    def __init__(self, method: Method, dt: float, k: float,
+    def __init__(self, method, dt: float, k: float,
                  masses: NDArray = None) -> None:
         """Defaults to all masses 1 if no argument supplied"""
-        self.method: Method = method
+        self.method = method
         self.dt = dt
         self.k = k
 
