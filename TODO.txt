@@ -1,14 +1,4 @@
-FMM method
-    properly define the precision number (probably more in accordance with the paper)
-    speed up FMM method constant compute time
-        is ~O(N) currently, but want to reduce the constant factor
+Report
 
-(
-assign acceleration function to universe class instead of constantly passing around
-    should be a bit cleaner
-
-calculate accelerations using more numpy
-    not really useful as order N method
-
-3D
-)
+Figures can be produced by defining plot functions to read from npz files and then plot, and then call these
+Means less code in actual report, and easy to keep all of the npz files etc. 
