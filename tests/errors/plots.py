@@ -143,9 +143,9 @@ def terms(FILE_PATH):
     full_x_labels = list(x_labels)*6
 
     bh_ax1.set_yscale('log')
-    bh_ax3.set_ylable('BH')
+    bh_ax3.set_ylabel('BH')
     bh_ax3.yaxis.set_label_position('right')
-    fmm_ax3.set_ylable('FMM')
+    fmm_ax3.set_ylabel('FMM')
     fmm_ax3.yaxis.set_label_position('right')
     bh_ax1.set_xticklabels(full_x_labels)
     bh_ax1.set_title('Potential')
