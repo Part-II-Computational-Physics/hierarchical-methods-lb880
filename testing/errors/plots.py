@@ -100,12 +100,17 @@ def n_crit(FILE_PATH):
     full_x_labels = list(x_labels)*6
 
     CoM_ax1.set_yscale('log')
-    CoM_ax1.set_ylabel('CoM')
-    multi_ax1.set_ylabel('Multi')
+    CoM_ax3.set_ylabel('CoM')
+    CoM_ax3.yaxis.set_label_position('right')
+    multi_ax3.set_ylabel('Multi')
+    multi_ax3.yaxis.set_label_position('right')
     CoM_ax1.set_xticklabels(full_x_labels)
     CoM_ax1.set_title('Potential')
     CoM_ax2.set_title('Force Magnitude')
     CoM_ax3.set_title('Force Angle')
+
+    return fig
+
 
 
 def terms(FILE_PATH):
@@ -138,8 +143,10 @@ def terms(FILE_PATH):
     full_x_labels = list(x_labels)*6
 
     bh_ax1.set_yscale('log')
-    bh_ax1.set_ylable('BH')
-    fmm_ax1.set_ylable('FMM')
+    bh_ax3.set_ylable('BH')
+    bh_ax3.yaxis.set_label_position('right')
+    fmm_ax3.set_ylable('FMM')
+    fmm_ax3.yaxis.set_label_position('right')
     bh_ax1.set_xticklabels(full_x_labels)
     bh_ax1.set_title('Potential')
     bh_ax2.set_title('Force Magnitude')
@@ -178,8 +185,10 @@ def theta(FILE_PATH):
     full_x_labels = list(x_labels)*6
 
     CoM_ax1.set_yscale('log')
-    CoM_ax1.set_ylabel('CoM')
-    multi_ax1.set_ylabel('Multi')
+    CoM_ax3.set_ylabel('CoM')
+    CoM_ax3.yaxis.set_label_position('right')
+    multi_ax3.set_ylabel('Multi')
+    multi_ax3.yaxis.set_label_position('right')
     CoM_ax1.set_xticks(CoM_ax1.get_xticks(), full_x_labels)
     for ax in axs.flat:
         ax.tick_params('x', labelrotation=90)
