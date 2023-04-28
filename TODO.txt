@@ -1,4 +1,0 @@
-Report
-
-Figures can be produced by defining plot functions to read from npz files and then plot, and then call these
-Means less code in actual report, and easy to keep all of the npz files etc. 
