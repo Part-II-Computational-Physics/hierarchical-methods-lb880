@@ -28,20 +28,11 @@ class Universe():
         self.positions = np.array([centres.real, centres.imag]).transpose()
         self.velocities = np.zeros_like(self.positions)
 
-        self.max_acceleration = 1 / dt**2
-        self.max_velocity = 10 / dt
-
     def get_particle_accelerations(self) -> NDArray:
         """Get particle accelerations for their current positions"""
         self.method.do_method()
         force_pers = self.k * np.array([particle.force_per for particle in self.particles])
         accelerations =  np.multiply(force_pers, self.charge_per_mass[:,np.newaxis])
-
-        acc_magnitude = np.linalg.norm(accelerations, axis=1)
-        if np.max(acc_magnitude) > self.max_acceleration:
-            acc_clipped = np.minimum(acc_magnitude, self.max_acceleration)
-            normalisation = acc_clipped / acc_magnitude
-            accelerations *= normalisation[:, np.newaxis]
 
         return accelerations
     
@@ -59,12 +50,6 @@ class Universe():
     def store_positions_velocities(self, pos_update, vel_update):
         self.positions += pos_update
         self.velocities += vel_update
-
-        vel_magnitude = np.linalg.norm(self.velocities, axis=1)
-        if np.max(vel_magnitude) > self.max_velocity:
-            acc_clipped = np.minimum(vel_magnitude, self.max_velocity)
-            normalisation = acc_clipped / vel_magnitude
-            self.velocities *= normalisation[:, np.newaxis]
 
         self._box_confine()
         self.set_particle_positions()
