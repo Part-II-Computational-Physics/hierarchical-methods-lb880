@@ -5,6 +5,7 @@ Code for the Barnes-Hut algorithm for N-Body approximation.
 
 Algorithm as described in 'A hierarchical O(N log N) force-calculation
 algorithm' by Barnes and Hut.
+Made in reference to https://github.com/barbagroup/FMM_tutorial. 
 """
 
 from . import cells

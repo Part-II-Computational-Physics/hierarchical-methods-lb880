@@ -94,6 +94,9 @@ def general(FILE_PATH, truncation=5):
 
     return fig
 
+def main():
+    fig = general('tests/timings/data/general.npz', 6)
+    plt.show()
 
-fig = general('tests/timings/data/general.npz', 6)
-plt.show()
+if __name__ == '__main__':
+    main()
