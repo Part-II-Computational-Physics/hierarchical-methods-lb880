@@ -34,6 +34,8 @@ def general(FILE_PATH):
     ax2.set_title('Force Magnitude')
     ax3.set_title('Force Angle')
 
+    fig.tight_layout()
+
     return fig
 
 
@@ -65,6 +67,8 @@ def max_level(FILE_PATH):
     ax1.set_title('Potential')
     ax2.set_title('Force Magnitude')
     ax3.set_title('Force Angle')
+
+    fig.tight_layout()
 
     return fig
 
@@ -109,8 +113,9 @@ def n_crit(FILE_PATH):
     CoM_ax2.set_title('Force Magnitude')
     CoM_ax3.set_title('Force Angle')
 
-    return fig
+    fig.tight_layout()
 
+    return fig
 
 
 def terms(FILE_PATH):
@@ -148,9 +153,13 @@ def terms(FILE_PATH):
     fmm_ax3.set_ylabel('FMM')
     fmm_ax3.yaxis.set_label_position('right')
     bh_ax1.set_xticklabels(full_x_labels)
+    for ax in axs.flat:
+        ax.tick_params('x', labelrotation=90)
     bh_ax1.set_title('Potential')
     bh_ax2.set_title('Force Magnitude')
     bh_ax3.set_title('Force Angle')
+
+    fig.tight_layout()
 
     return fig
 
@@ -182,7 +191,7 @@ def theta(FILE_PATH):
     multi_ax2.boxplot(data_multi_mag,   notch=True, whis=(0,100))
     multi_ax3.boxplot(data_multi_angle, notch=True, whis=(0,100))
 
-    full_x_labels = list(x_labels)*6
+    full_x_labels = list(np.round(x_labels,2))*6
 
     CoM_ax1.set_yscale('log')
     CoM_ax3.set_ylabel('CoM')
@@ -195,5 +204,7 @@ def theta(FILE_PATH):
     CoM_ax1.set_title('Potential')
     CoM_ax2.set_title('Force Magnitude')
     CoM_ax3.set_title('Force Angle')
+
+    fig.tight_layout()
 
     return fig

@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from . import fits
 
 def general(FILE_PATH):
     with np.load(FILE_PATH) as data:
@@ -26,7 +27,7 @@ def general(FILE_PATH):
 
     # ax.plot(particle_numbers, particle_numbers*10**-3.7)
 
-    ax.set_title(f'Runtimes for the different methods, (different particle numbers). '
+    ax.set_title(f'Runtimes for the different methods. '
                  f'terms={terms}, theta={theta}', wrap=True)
 
     # ax.set_aspect('equal')
@@ -52,7 +53,7 @@ def max_level(FILE_PATH):
 
     fig, ax = plt.subplots()
 
-    ax.errorbar(max_levels, averages, stdevs, capsize=3)
+    ax.errorbar(max_levels, averages, stdevs, fmt=':_', capsize=3)
 
     ax.set_title('Times for one more and one less level than default. '
                  f'num_particles={num_particles}, normal_max={normal_max}, terms={terms}', wrap=True)
@@ -74,7 +75,7 @@ def theta(FILE_PATH):
 
     fig, ax = plt.subplots()
 
-    ax.errorbar(thetas, averages, stdevs, capsize=3)
+    ax.errorbar(thetas, averages, stdevs, fmt=':_', capsize=3)
 
     ax.set_title('Times for varying thetas. '
                  f'num_particles={num_particles}, terms={terms}', wrap=True)
@@ -97,7 +98,7 @@ def n_crit(FILE_PATH):
 
     fig, ax = plt.subplots()
 
-    ax.errorbar(n_crits, averages, stdevs, capsize=3)
+    ax.errorbar(n_crits, averages, stdevs, fmt=':_', capsize=3)
 
     ax.set_title('Times for varying n_crit. '
                  f'num_particles={num_particles}, theta={theta}, terms={terms}', wrap=True)
@@ -118,21 +119,27 @@ def terms(FILE_PATH):
         bh_stdevs = data['bh_stdevs']
         fmm_averages = data['fmm_averages']
         fmm_stdevs = data['fmm_stdevs']
-        terms_vals = data['terms_vals']
+        terms_vals = np.array(data['terms_vals'])
 
     fig, axs = plt.subplots(2, sharex='all')
     ax1, ax2 = axs
 
-    ax1.errorbar(terms_vals, bh_averages, bh_stdevs, capsize=3, label='BH')
-    ax2.errorbar(terms_vals, fmm_averages, fmm_stdevs, capsize=3, label='FMM')
+    ax1.errorbar(terms_vals, bh_averages, bh_stdevs, fmt='_', capsize=3, label='BH')
+    ax2.errorbar(terms_vals, fmm_averages, fmm_stdevs, fmt='_', capsize=3, label='FMM')
+
+    fmm_params, fmm_fit = fits.fmm_terms(FILE_PATH)
+    ax2.plot(terms_vals, fmm_fit, '-')
 
     fig.suptitle('Times for varying terms. '
                  f'num_particles={num_particles}, theta={theta}, terms={terms}', wrap=True)
 
     ax2.set_xlabel('Terms')
+    ax2.set_xticks(np.linspace(terms_vals[0], terms_vals[-1], 5, endpoint=True, dtype=int))
     fig.supylabel('Runtime in Seconds')
 
     ax1.set_title('BH')
     ax2.set_title('FMM')
+
+    fig.tight_layout()
 
     return fig
