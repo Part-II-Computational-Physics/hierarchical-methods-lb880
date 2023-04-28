@@ -3,8 +3,8 @@ from numpy.typing import NDArray
 
 import numpy as np
 
-from ..general import Particle
-from .. import general
+from packages import general
+from packages.general import Particle
 
 class Universe():
 

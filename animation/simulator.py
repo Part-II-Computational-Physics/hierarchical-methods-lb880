@@ -1,27 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 
 import packages
-
-# def animate(i):
-#     print(i*10)
-#     for _ in range(10):
-#         universe.update_system_RK4()
-
-#         x = [p.centre.real for p in universe.particles]
-#         y = [p.centre.imag for p in universe.particles]
-
-#         pots.append(universe.potential_energy())
-#         kins.append(universe.kinetic_energy())
-#     scatter.set_offsets(np.transpose((x,y)))
-#     return scatter,
     
 np.random.seed(0)
 
-dt = 0.0001
+dt = 0.001
 k=1
-num_protons_side = 16
+
+num_protons_side = 32
 num_protons = num_protons_side ** 2
 
 protons = [packages.general.Particle(1) for _ in range(num_protons)]
@@ -29,8 +16,11 @@ electrons = [packages.general.Particle(-1) for _ in range(num_protons)]
 
 hack_finest_level = packages.fmm.FinestLevel(int(np.log2(num_protons_side)), 1)
 centres = hack_finest_level.array[:,:,0].reshape(-1)
+half_box_size = centres[0].real
 for p, c in zip(protons, centres):
-    p.centre = c
+    noise_x = half_box_size * np.random.random() - 0.5*half_box_size
+    noise_y = half_box_size * np.random.random() - 0.5*half_box_size
+    p.centre = c + complex(noise_x, noise_y)
 
 particles = protons + electrons
 
@@ -39,24 +29,14 @@ masses[:masses.size//2] *= 1000
 
 pair_method = packages.general.Pairwise(particles)
 bh_method = packages.bh.BH(particles, 0.5, terms=3)
-fmm_method = packages.fmm.FMM(particles, 10)
-universe = packages.animation.Universe(bh_method, dt, k, masses=masses)
+fmm_method = packages.fmm.FMM(particles, 4)
 
+universe = packages.animation.Universe(fmm_method, dt, k, masses=masses)
 
 charges = [p.charge for p in universe.particles]
-# x = [p.centre.real for p in universe.particles]
-# y = [p.centre.imag for p in universe.particles]
-# fig, ax = plt.subplots()
-# ax.set_aspect('equal')
-# ax.set_xlim(0,1)
-# ax.set_ylim(0,1)
-# scatter = ax.scatter(x,y, c=charges, cmap='plasma')
 
 pots = []
 kins = []
-
-# anim = FuncAnimation(fig, animate, 100, blit=True)
-# plt.show()
 
 frames = int(input('Frames: '))
 
@@ -70,7 +50,8 @@ for i in range(frames+1):
     pots.append(universe.potential_energy())
     kins.append(universe.kinetic_energy())
 
-FILE_PATH = 'sim_data_local/006.npz'
+
+FILE_PATH = 'sim_data_local/106.npz'
 pots_arr, kins_arr = np.array(pots), np.array(kins)
 np.savez(FILE_PATH, positions=positions_store, pots=pots_arr, kins=kins_arr, charges=charges)
 
