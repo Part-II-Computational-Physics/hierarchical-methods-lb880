@@ -35,7 +35,7 @@ def general(FILE_PATH):
     ax.set_yscale('log')
 
     ax.set_xlabel('Number of Particles')
-    ax.set_ylabel('Runtime in Seconds')
+    ax.set_ylabel('Runtime / s')
     ax.legend()
 
     return fig
@@ -58,7 +58,7 @@ def max_level(FILE_PATH):
     ax.set_title('Times for one more and one less level than default. '
                  f'num_particles={num_particles}, normal_max={normal_max}, terms={terms}', wrap=True)
 
-    ax.set_xlabel('Max Level')
+    ax.set_xlabel('max_level')
     ax.set_ylabel('Runtime in Seconds')
 
     return fig
@@ -80,8 +80,8 @@ def theta(FILE_PATH):
     ax.set_title('Times for varying thetas. '
                  f'num_particles={num_particles}, terms={terms}', wrap=True)
 
-    ax.set_xlabel('Theta')
-    ax.set_ylabel('Runtime in Seconds')
+    ax.set_xlabel('theta')
+    ax.set_ylabel('Runtime / s')
 
     return fig
 
@@ -104,7 +104,7 @@ def n_crit(FILE_PATH):
                  f'num_particles={num_particles}, theta={theta}, terms={terms}', wrap=True)
 
     ax.set_xlabel('n_crit')
-    ax.set_ylabel('Runtime in Seconds')
+    ax.set_ylabel('Runtime / s')
 
     return fig
 
@@ -133,9 +133,9 @@ def terms(FILE_PATH):
     fig.suptitle('Times for varying terms. '
                  f'num_particles={num_particles}, theta={theta}, terms={terms}', wrap=True)
 
-    ax2.set_xlabel('Terms')
+    fig.supxlabel('terms')
     ax2.set_xticks(np.linspace(terms_vals[0], terms_vals[-1], 5, endpoint=True, dtype=int))
-    fig.supylabel('Runtime in Seconds')
+    fig.supylabel('Runtime / s')
 
     ax1.set_title('BH')
     ax2.set_title('FMM')

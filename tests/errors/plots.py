@@ -53,7 +53,7 @@ def max_level(FILE_PATH):
     ax1, ax2, ax3 = axs
 
     fig.suptitle(f'Errors for FMM (different max_level) for {num_particles} particles. terms={terms}')
-    fig.supxlabel('Max Level')
+    fig.supxlabel('max_level')
 
     ax1.boxplot(data_pots,  notch=True, whis=(0,100))
     ax2.boxplot(data_mag,   notch=True, whis=(0,100))
@@ -135,7 +135,7 @@ def terms(FILE_PATH):
     (bh_ax1, bh_ax2, bh_ax3), (fmm_ax1, fmm_ax2, fmm_ax3) = axs
 
     fig.suptitle(f'Errors for BH and FMM (different terms) for {num_particles} particles. theta={theta}')
-    fig.supxlabel('Terms')
+    fig.supxlabel('terms')
     fig.supylabel('Fractional Error')
 
     bh_ax1.boxplot(data_bh_pots,  notch=True, whis=(0,100))
@@ -181,7 +181,7 @@ def theta(FILE_PATH):
     (CoM_ax1, CoM_ax2, CoM_ax3), (multi_ax1, multi_ax2, multi_ax3) = axs
 
     fig.suptitle(f'Errors for CoM and multi BH (different theta) for {num_particles} particles. terms={terms}')
-    fig.supxlabel('Theta')
+    fig.supxlabel('theta')
     fig.supylabel('Fractional Error')
 
     CoM_ax1.boxplot(data_CoM_pots,  notch=True, whis=(0,100))
