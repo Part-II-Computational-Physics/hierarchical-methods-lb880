@@ -72,5 +72,18 @@ class Pairwise():
     
     def do_method(self, zero_potentials: bool = True, zero_forces: bool = True
                   ) -> None:
+        """Perform the full Pairwise algorithm. Evaluating
+        potentials and forces for all particles.
+
+        Parameters
+        ----------
+        zero_potentials : bool, default True
+            Controls if particle potentials are reset to zero in the process.
+            Default of True resets.
+        zero_forces : bool, default True
+            Controls if particle forces are reset to zero in the process.
+            Default of True resets.
+        """
+
         self.potentials(self.particles, zero_potentials)
         self.forces(self.particles, zero_forces)

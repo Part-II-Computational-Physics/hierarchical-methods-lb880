@@ -90,6 +90,7 @@ class RootCell(Cell):
         """Calculate the multipole for every cell in the tree. Using direct
         calculation for leaf cells, and M2M for branches.
         """
+
         for cell in reversed(self.cells):
             if cell.bit_children == 0: # leaf
                 cell._calculate_multipole()
@@ -120,6 +121,10 @@ class RootCell(Cell):
             particle.force_per += other.charge \
                                 * np.array((z0.real, z0.imag)) / abs(z0)**2
 
+        # different definitions used for calculating the 'distance' to the cell
+        # as either the centre of mass, or centre (for multipole)
+        # and also the different methods for the following interaction with the
+        # given cell
         def _CoM_z0(particle: Particle, cell: Cell) -> complex:
             return particle.centre - cell.CoM
         
@@ -141,6 +146,7 @@ class RootCell(Cell):
             w_prime = cell.multipole[0] / z0 - np.sum(k_vals * cell.multipole[1:] / z0**(k_vals+1))
             particle.force_per += np.array((w_prime.real, -w_prime.imag))
         
+        # choose correct functions for given method
         if use_CoM_far:
             _get_z0 = _CoM_z0
             _far_method = _CoM_far

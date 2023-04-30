@@ -55,6 +55,7 @@ class Universe():
         self.set_particle_positions()
 
     def _box_confine(self) -> None:
+        """confines particles to the unit box. Just flips velocities"""
         self.positions = self.positions % 2
         for i, pos in enumerate(self.positions):
             if pos[0] > 1:

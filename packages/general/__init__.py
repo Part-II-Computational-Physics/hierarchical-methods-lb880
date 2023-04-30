@@ -2,7 +2,7 @@
 General
 =======
 Module with `Point` and `Particle` classes,
-and pairwise interaction methods.
+and `Pairwise` class for pairwise interaction method.
 """
 
 from .point import Point

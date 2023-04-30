@@ -135,7 +135,8 @@ class Cell():
     def __repr__(self) -> str:
         return f'Cell: {self.index}, lvl {self.level})'
     
-    # Used to correctly perform set operations on Cells
+    # Used to correctly perform set operations on Cells, so equivalent objects
+    # recognised as so
     def __key(self) -> Tuple:
         return (self.index, self.level)
 

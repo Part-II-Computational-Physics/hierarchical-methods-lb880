@@ -97,8 +97,8 @@ class FMM():
     def do_method(self, zero_expansions: bool = True,
                zero_potentials: bool = True, zero_forces: bool = True
                ) -> None:
-        """Updates particle potentials using the full FMM method, with the
-        given parameters
+        """Perform the full Fast Multipole Method algorithm. Evaluating
+        potentials and forces for all particles.
         
         Parameters
         ----------

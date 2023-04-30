@@ -100,9 +100,6 @@ class Level():
             child cell multipoles from.
         """
 
-        # ################################################
-        # # Can definitely optimise the way this is done #
-        # ################################################
         for x in range(self.axis_amount):
             for y in range(self.axis_amount):
                 self._cell_M2M(Cell(x, y, self.level_num), child_level)
@@ -167,9 +164,6 @@ class Level():
         for child in cell.children():
             z0 = child_level.array[child.index][0] - self.array[cell.index][0]
 
-            # ################################################
-            # # Can definitely optimise the way this is done #
-            # ################################################
             for l in range(self.terms):
                 for k in range(l, self.terms):
                     child_level.array[child.index][self.terms+1+l] \

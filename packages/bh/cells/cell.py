@@ -236,6 +236,7 @@ class Cell(Point):
         """Use the M2M operation to generate the multipole the cell due to its
         children.
         """
+
         for child in self.children:
             if child:
 
@@ -258,6 +259,7 @@ class Cell(Point):
         level : int, default 0
             Controls number of tabs print is indented by.
         """
+        
         level_coords = (
             int(self.centre.real * 2**(self.level) -0.5),
             int(self.centre.imag * 2**(self.level) -0.5)

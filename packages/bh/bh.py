@@ -73,9 +73,10 @@ class BH():
         self.root = cells.RootCell(0.5+0.5j, 1, self.particles, self.theta,
                                    self.terms, self.n_crit, self.max_level)
 
-    def do_method(self, zero_potentials: bool = True, zero_forces: bool = True):
-        """Perform the full Barnes-Hut algorithm. Constructing the tree and
-        evaluating the particles.
+    def do_method(self, zero_potentials: bool = True, zero_forces: bool = True
+                  ) -> None:
+        """Perform the full Barnes-Hut algorithm. Evaluating potentials and
+        forces for all particles
 
         Parameters
         ----------
