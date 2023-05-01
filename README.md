@@ -8,3 +8,7 @@ Report can be found in [Report.ipynb](Report.ipynb)
 Main codebase is within [packages](packages). 
 Supplementary code in [tests](tests) and [animation](animation). 
 Additional figures and code for plotting within the Report are in [Figures](Figures) and [report_plots](report_plots). 
+
+## Animations
+Should videos not be visible within the Jupyter notebook, the files can be found in [Figures/Animations](Figures/Animations). 
+**However [animations.md](animations.md) should play all three within github.**
